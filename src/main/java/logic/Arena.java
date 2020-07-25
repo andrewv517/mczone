@@ -2,6 +2,7 @@ package logic;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import listeners.DeathAction;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -85,6 +86,7 @@ public class Arena {
         player.getActivePotionEffects().clear();
         player.setFireTicks(0);
         player.setHealth(20);
+
         if (this.playersInGulag.size() >= 2 && this.playersInGulagMatch.isEmpty()) {
             Location side1 = new Location(player.getWorld(), 147, 43, -569);
             Location side2 = new Location(player.getWorld(), 147, 43, -598);
@@ -100,6 +102,8 @@ public class Arena {
 
             this.playersInGulag.remove(0);
             this.playersInGulag.remove(0);
+
+
 
             for (Player p : this.playersInGulagMatch) {
                 p.getInventory().clear();
@@ -176,7 +180,7 @@ public class Arena {
 
     public void endFreezePeriod() {
         this.freezePeriod = false;
-        setTimer(30);
+        setTimer(15);
         startTimer();
     }
 
@@ -207,6 +211,10 @@ public class Arena {
 
     public void removeWorldBorder(WorldBorder worldBorder) {
         worldBorder.setSize(30000000);
+        Bukkit.getScheduler().cancelTask(otherID);
+    }
+
+    public void stopWorldBorderTimer() {
         Bukkit.getScheduler().cancelTask(otherID);
     }
 
@@ -289,7 +297,7 @@ public class Arena {
                 return;
             }
 
-            if (timer == 30 || timer == 20 || timer == 10 || timer <= 5) {
+            if (timer == 30 || timer == 15 || timer == 10 || timer <= 5) {
                 Bukkit.broadcastMessage(ChatColor.GOLD + "Grace period for " + timer + " more seconds!");
             }
 
