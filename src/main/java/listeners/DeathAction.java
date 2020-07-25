@@ -21,6 +21,8 @@ public class DeathAction implements Listener {
     private final SurvivalMain survivalMain;
     private int timer;
     private int taskID;
+    private int gulagID;
+    private int gulagTimer;
 
     public DeathAction() {
         this.survivalMain = SurvivalMain.survivalMain;
@@ -65,6 +67,8 @@ public class DeathAction implements Listener {
 
             arena.addPlayerToPastGulag(other);
             other.getInventory().clear();
+            other.setHealth(20);
+            other.setFoodLevel(20);
             other.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
             //teleport
             other.teleport(arena.getRedeployLocation());
@@ -96,6 +100,42 @@ public class DeathAction implements Listener {
         }
 
 
+    }
+
+    public void startGulagTimer(Player p) {
+        BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+        gulagTimer = 120;
+        Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(p);
+        int size = arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size();
+        gulagID = scheduler.scheduleSyncRepeatingTask(survivalMain, () -> {
+            if (gulagTimer == 0) {
+                arena.addPlayerToPastGulag(p);
+                p.getInventory().clear();
+                p.setHealth(20);
+                p.setFoodLevel(20);
+                p.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
+                //teleport
+                p.teleport(arena.getRedeployLocation());
+                p.sendTitle(ChatColor.GOLD + "You have 20 seconds to re-deploy!", "Your elytra will be removed after", 10, 60, 10);
+                stopGulagTimer();
+                return;
+            }
+
+            if (size != arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) {
+                stopGulagTimer();
+            }
+
+            if (gulagTimer == 60) {
+                p.sendMessage(ChatColor.GOLD + "If no one is sent to the gulag in 1 minute, you will be redeployed!");
+            }
+
+            gulagTimer--;
+
+        }, 0L, 20L);
+    }
+
+    public void stopGulagTimer() {
+        Bukkit.getScheduler().cancelTask(gulagID);
     }
 
     @EventHandler
