@@ -45,6 +45,9 @@ public class BlockAction implements Listener {
     public boolean onBlockPlace(BlockPlaceEvent event) {
         for (Arena a : survivalMain.getArenaManager().getArenas()) {
             if (isInside(event.getBlock().getLocation(), a.getRegion())) {
+
+                // TODO: only do this if game is playing
+
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
                 return true;
