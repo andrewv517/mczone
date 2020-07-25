@@ -21,4 +21,13 @@ public class Utils {
         return x <= test && y >= test;
     }
 
+    public static Location offsetLocation(Location loc, float dx, float dy, float dz, float dYaw, float dPitch) {
+        return new Location(loc.getWorld(), loc.getX() + dx, loc.getY() + dy, loc.getZ() + dz,
+                loc.getYaw() + dYaw, loc.getPitch() + dPitch);
+    }
+
+    public static Location offsetLocation(Location loc, float dx, float dy, float dz) {
+        return offsetLocation(loc, dz, dy, dz, 0, 0);
+    }
+
 }

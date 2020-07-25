@@ -1,6 +1,7 @@
 package logic;
 
 import com.sk89q.worldedit.regions.Region;
+import com.sun.deploy.net.MessageHeader;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -42,6 +43,7 @@ public class Arena {
     private final List<Player> playersInGulagMatch;
     private final List<Player> pastGulag;
     private final Map<Block, BlockData> explodedBlocks;
+    private List<Location> fallenBlocks;
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
@@ -51,13 +53,14 @@ public class Arena {
         this.region = region;
         this.name = name;
         this.spawnPoints = new HashMap<>();
-        this.world = (World) region.getWorld();
+        this.world = Bukkit.getWorld(Objects.requireNonNull(region.getWorld()).getName()); // TODO: find a better way to do this
         this.survivalMain = SurvivalMain.survivalMain;
         this.playersInGulag = new ArrayList<>();
         this.playersInGulagMatch = new ArrayList<>();
         this.pastGulag = new ArrayList<>();
         this.borderSize = borderSize;
-        explodedBlocks = new HashMap<>();
+        this.explodedBlocks = new HashMap<>();
+        this.fallenBlocks = new ArrayList<>();
     }
 
     public void addPlayer(Player player) {
@@ -86,6 +89,10 @@ public class Arena {
 
     public void addExplodedBlock(Block block, BlockData data) {
         this.explodedBlocks.put(block, data);
+    }
+
+    public void addFallenBlock(Location location) {
+        this.fallenBlocks.add(location);
     }
 
     public void addPlayerToGulag(Player player) {
@@ -369,6 +376,11 @@ public class Arena {
     }
 
     private void repairMap() {
+        // this must be done first otherwise we might overwrite an original block
+        for (Location location : fallenBlocks) {
+            Block block = location.getBlock();
+            block.setType(Material.AIR);
+        }
         for (Block block : explodedBlocks.keySet()) {
             block.setBlockData(explodedBlocks.get(block));
         }

@@ -4,19 +4,27 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import logic.Arena;
 import logic.ArenaExplosion;
+import logic.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
+
+import java.util.Objects;
 
 public class BlockAction implements Listener {
 
@@ -55,9 +63,10 @@ public class BlockAction implements Listener {
                 // TODO: only do this if game is playing
                 Block block = event.getBlockPlaced();
                 if (block.getType() == Material.TNT) {
-                    new ArenaExplosion(block.getLocation()).explode();
+                    block.setType(Material.AIR);
+                    Objects.requireNonNull(block.getLocation().getWorld())
+                            .spawn(Utils.offsetLocation(block.getLocation(), 0.5f, 0.5f, 0.5f), TNTPrimed.class);
                 }
-
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
                 return true;
@@ -69,21 +78,55 @@ public class BlockAction implements Listener {
     @EventHandler
     public boolean onBlockExplode(BlockExplodeEvent event) {
 
-        Block block = event.getBlock();
-        Arena arena = survivalMain.getArenaManager().getArenaWithLocation(block.getLocation());
-        if (arena != null) {
-            if (block.getType() == Material.GLASS) {
-                event.setCancelled(true);
-            } else {
-                arena.addExplodedBlock(block, block.getBlockData());
-                // might need to set block to air first as to avoid the entity from instantly stopping
-                FallingBlock fallingBlock = block.getWorld().spawnFallingBlock(block.getLocation(), block.getBlockData());
-                fallingBlock.setVelocity(new Vector(Math.random() * 6 - 3, Math.random() * 3 + 1, Math.random() * 6 - 3));
-                fallingBlock.setDropItem(false);
+        for (Block block : event.blockList()) {
+            Arena arena = survivalMain.getArenaManager().getArenaWithLocation(block.getLocation());
+            if (arena != null) {
+                if (block.getType() == Material.GLASS) {
+                    event.setCancelled(true);
+                } else {
+                    arena.addExplodedBlock(block, block.getBlockData());
+                    // might need to set block to air first as to avoid the entity from instantly stopping
+                    FallingBlock fallingBlock = block.getWorld().spawnFallingBlock(block.getLocation(), block.getBlockData());
+                    fallingBlock.setVelocity(new Vector(Math.random() - 0.5, Math.random() * 0.5 + 0.5, Math.random() - 0.5));
+                    fallingBlock.setDropItem(false);
+                }
             }
         }
 
         return false;
+
+    }
+
+    @EventHandler
+    public boolean onEntityExplode(EntityExplodeEvent event) {
+
+        Location location = event.getLocation();
+        Arena arena = survivalMain.getArenaManager().getArenaWithLocation(location);
+        if (arena != null) {
+            if (event.getEntityType() == EntityType.PRIMED_TNT) {
+                event.setCancelled(true);
+                new ArenaExplosion(Utils.offsetLocation(location, 0.5f, 0.5f, 0.5f)).explode();
+            }
+        }
+
+        return true;
+
+    }
+
+    @EventHandler
+    public boolean onEntityChangeBlockEvent(EntityBlockFormEvent event) {
+
+        // consider that this might cause issues if a block of sand falls during map construction
+
+        Entity entity = event.getEntity();
+        Arena arena = survivalMain.getArenaManager().getArenaWithLocation(entity.getLocation());
+        if (arena != null) {
+            if (entity instanceof FallingBlock) {
+                arena.addFallenBlock(entity.getLocation());
+            }
+        }
+
+        return true;
 
     }
 
