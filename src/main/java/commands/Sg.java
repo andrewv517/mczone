@@ -63,8 +63,17 @@ public class Sg implements CommandExecutor {
                 return true;
             }
 
-            if (args.length != 2) {
-                sender.sendMessage(ChatColor.RED + "Incorrect command usage! Try /sg create [arena name]");
+            if (args.length != 3) {
+                sender.sendMessage(ChatColor.RED + "Incorrect command usage! Try /sg create [arena name] [initial border diameter]");
+                return true;
+            }
+
+            double borderDiameter;
+
+            try {
+                borderDiameter = Double.parseDouble(args[2]);
+            } catch (Exception e) {
+                sender.sendMessage(ChatColor.RED + "Not a valid border diameter!");
                 return true;
             }
 
@@ -77,7 +86,7 @@ public class Sg implements CommandExecutor {
                 Region r = s.getSelection(s.getSelectionWorld());
 
                 // implement checking if an arena already exists at those coordinates? don't feel like it rn
-                Arena a = new Arena(r, args[1]);
+                Arena a = new Arena(r, args[1], borderDiameter);
 
                 survivalMain.getArenaManager().addArena(a);
                 sender.sendMessage(ChatColor.GOLD + "Arena \"" + args[1] + "\" successfully created!");

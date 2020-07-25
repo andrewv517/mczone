@@ -42,8 +42,9 @@ public class Arena {
     private final List<Player> pastGulag;
     private Location redeployLocation;
     private Location center = null;
+    private double borderSize;
 
-    public Arena(Region region, String name) {
+    public Arena(Region region, String name, double borderSize) {
         this.players = new ArrayList<>();
         this.region = region;
         this.name = name;
@@ -52,6 +53,7 @@ public class Arena {
         this.playersInGulag = new ArrayList<>();
         this.playersInGulagMatch = new ArrayList<>();
         this.pastGulag = new ArrayList<>();
+        this.borderSize = borderSize;
     }
 
     public void addPlayer(Player player) {
@@ -199,8 +201,7 @@ public class Arena {
         assert world != null;
         world.getWorldBorder().setCenter(this.getCenter());
 
-        // don't hardcode this. fix later
-        world.getWorldBorder().setSize(300);
+        world.getWorldBorder().setSize(this.borderSize);
         startWorldBorderTimer(240, world.getWorldBorder());
     }
 
