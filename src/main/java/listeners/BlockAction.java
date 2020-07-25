@@ -5,6 +5,7 @@ import com.sk89q.worldedit.regions.Region;
 import logic.Arena;
 import logic.ArenaExplosion;
 import logic.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,6 +21,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
@@ -85,7 +87,9 @@ public class BlockAction implements Listener {
                 if (block.getType() == Material.GLASS) {
                     event.setCancelled(true);
                 } else {
-                    arena.addExplodedBlock(block, block.getBlockData());
+                    if (!arena.getExplodedBlocks().containsKey(block) && !arena.getFallenBlocks().contains(block.getLocation())) {
+                        arena.addExplodedBlock(block, block.getBlockData());
+                    }
                     // might need to set block to air first as to avoid the entity from instantly stopping
                     FallingBlock fallingBlock = block.getWorld().spawnFallingBlock(block.getLocation(), block.getBlockData());
                     fallingBlock.setVelocity(new Vector(Math.random() - 0.5, Math.random() * 0.5 + 0.5, Math.random() - 0.5));
@@ -115,7 +119,7 @@ public class BlockAction implements Listener {
     }
 
     @EventHandler
-    public boolean onEntityChangeBlockEvent(EntityBlockFormEvent event) {
+    public boolean onEntityChangeBlockEvent(EntityChangeBlockEvent event) {
 
         // consider that this might cause issues if a block of sand falls during map construction
 
@@ -123,7 +127,7 @@ public class BlockAction implements Listener {
         Arena arena = survivalMain.getArenaManager().getArenaWithLocation(entity.getLocation());
         if (arena != null) {
             if (entity instanceof FallingBlock) {
-                arena.addFallenBlock(entity.getLocation());
+                arena.addFallenBlock(entity.getLocation().getBlock().getLocation()); // get integer location
             }
         }
 

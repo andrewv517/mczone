@@ -177,6 +177,8 @@ public class Sg implements CommandExecutor {
                 }
             }
 
+            a.prepareMap();
+
             if (left > 0) {
                 for (Location location : a.getSpawnPoints().keySet()) {
                     // true means someone is there
@@ -241,6 +243,17 @@ public class Sg implements CommandExecutor {
             sender.sendMessage(ChatColor.GOLD + "Center successfully set.");
             return true;
 
+        } else if (args[0].equalsIgnoreCase("prepare")) {
+            if (args.length != 2) {
+                sender.sendMessage(ChatColor.RED + "Incorrect command usage! While inside an arena, try /sg repair [name of arena]");
+            }
+            if (!survivalMain.getArenaManager().containsBasedOnName(args[1])) {
+                sender.sendMessage(ChatColor.RED + "No arena named \"" + args[1] + "\"!");
+                return true;
+            }
+            Arena arena = survivalMain.getArenaManager().getArena(args[1]);
+            arena.prepareMap();
+            return true;
         }
 
         sender.sendMessage(ChatColor.RED + "Not a command!");

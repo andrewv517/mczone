@@ -43,7 +43,7 @@ public class Arena {
     private final List<Player> playersInGulagMatch;
     private final List<Player> pastGulag;
     private final Map<Block, BlockData> explodedBlocks;
-    private List<Location> fallenBlocks;
+    private final List<Location> fallenBlocks;
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
@@ -91,8 +91,16 @@ public class Arena {
         this.explodedBlocks.put(block, data);
     }
 
+    public Map<Block, BlockData> getExplodedBlocks() {
+        return explodedBlocks;
+    }
+
     public void addFallenBlock(Location location) {
         this.fallenBlocks.add(location);
+    }
+
+    public List<Location> getFallenBlocks() {
+        return fallenBlocks;
     }
 
     public void addPlayerToGulag(Player player) {
@@ -372,7 +380,6 @@ public class Arena {
             }
         }
 
-        Bukkit.broadcastMessage(ChatColor.GREEN + "Chests refilled");
     }
 
     private void repairMap() {

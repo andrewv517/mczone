@@ -21,4 +21,7 @@ commands:
   sg start:
     description: Start a game.
     usage: /<command> [name of arena]
+  sg prepare:
+    description: Prepare an arena.
+    usage: /<command> [name of arena]
 depend: [WorldEdit]
