@@ -3,13 +3,19 @@ package listeners;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import logic.Arena;
+import logic.ArenaExplosion;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
 
 public class BlockAction implements Listener {
@@ -47,6 +53,10 @@ public class BlockAction implements Listener {
             if (isInside(event.getBlock().getLocation(), a.getRegion())) {
 
                 // TODO: only do this if game is playing
+                Block block = event.getBlockPlaced();
+                if (block.getType() == Material.TNT) {
+                    new ArenaExplosion(block.getLocation()).explode();
+                }
 
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
@@ -54,6 +64,27 @@ public class BlockAction implements Listener {
             }
         }
         return false;
+    }
+
+    @EventHandler
+    public boolean onBlockExplode(BlockExplodeEvent event) {
+
+        Block block = event.getBlock();
+        Arena arena = survivalMain.getArenaManager().getArenaWithLocation(block.getLocation());
+        if (arena != null) {
+            if (block.getType() == Material.GLASS) {
+                event.setCancelled(true);
+            } else {
+                arena.addExplodedBlock(block, block.getBlockData());
+                // might need to set block to air first as to avoid the entity from instantly stopping
+                FallingBlock fallingBlock = block.getWorld().spawnFallingBlock(block.getLocation(), block.getBlockData());
+                fallingBlock.setVelocity(new Vector(Math.random() * 6 - 3, Math.random() * 3 + 1, Math.random() * 6 - 3));
+                fallingBlock.setDropItem(false);
+            }
+        }
+
+        return false;
+
     }
 
     // tests if location is inside region

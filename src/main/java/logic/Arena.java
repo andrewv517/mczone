@@ -1,17 +1,14 @@
 package logic;
 
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -44,6 +41,7 @@ public class Arena {
     private final boolean gulagFreezePeriod = true;
     private final List<Player> playersInGulagMatch;
     private final List<Player> pastGulag;
+    private final Map<Block, BlockData> explodedBlocks;
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
@@ -59,6 +57,7 @@ public class Arena {
         this.playersInGulagMatch = new ArrayList<>();
         this.pastGulag = new ArrayList<>();
         this.borderSize = borderSize;
+        explodedBlocks = new HashMap<>();
     }
 
     public void addPlayer(Player player) {
@@ -83,6 +82,10 @@ public class Arena {
 
     public boolean isFreezePeriod() {
         return freezePeriod;
+    }
+
+    public void addExplodedBlock(Block block, BlockData data) {
+        this.explodedBlocks.put(block, data);
     }
 
     public void addPlayerToGulag(Player player) {
@@ -304,7 +307,13 @@ public class Arena {
 
     }
 
-    public void fillChests() {
+    public void prepareMap() {
+        // make sure to repair the map first in case a chest was destroyed.
+        repairMap();
+        fillChests();
+    }
+
+    private void fillChests() {
 
 
         // 40% chance of food
@@ -357,6 +366,12 @@ public class Arena {
         }
 
         Bukkit.broadcastMessage(ChatColor.GREEN + "Chests refilled");
+    }
+
+    private void repairMap() {
+        for (Block block : explodedBlocks.keySet()) {
+            block.setBlockData(explodedBlocks.get(block));
+        }
     }
 
 }

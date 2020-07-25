@@ -210,7 +210,7 @@ public class Sg implements CommandExecutor {
             survivalMain.getArenaManager().getArenaWithPlayer(player).getSpawnPoints().replaceAll((l, v) -> false);
 
             setTimer(10);
-            survivalMain.getArenaManager().getArenaWithPlayer(player).fillChests();
+            survivalMain.getArenaManager().getArenaWithPlayer(player).prepareMap();
             startTimer(survivalMain.getArenaManager().getArenaWithPlayer(player));
             return true;
         } else if (args[0].equalsIgnoreCase("setcenter")) {
