@@ -66,9 +66,10 @@ public class BlockAction implements Listener {
                     block.setType(Material.AIR);
                     Objects.requireNonNull(block.getLocation().getWorld())
                             .spawn(Utils.offsetLocation(block.getLocation(), 0.5f, 0.5f, 0.5f), TNTPrimed.class);
+                } else {
+                    event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
                 }
                 event.setCancelled(true);
-                event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
                 return true;
             }
         }
