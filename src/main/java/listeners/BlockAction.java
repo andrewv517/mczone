@@ -81,6 +81,8 @@ public class BlockAction implements Listener {
     @EventHandler
     public boolean onBlockExplode(BlockExplodeEvent event) {
 
+        Block source = event.getBlock();
+
         for (Block block : event.blockList()) {
             Arena arena = survivalMain.getArenaManager().getArenaWithLocation(block.getLocation());
             if (arena != null) {
@@ -92,7 +94,13 @@ public class BlockAction implements Listener {
                     }
                     // might need to set block to air first as to avoid the entity from instantly stopping
                     FallingBlock fallingBlock = block.getWorld().spawnFallingBlock(block.getLocation(), block.getBlockData());
-                    fallingBlock.setVelocity(new Vector(Math.random() - 0.5, Math.random() * 0.5 + 0.5, Math.random() - 0.5));
+
+                    // currently this just gives all blocks a positive y-velocity, that could be changed if desired
+                    float dx = block.getX() - source.getX();
+                    float dz = block.getZ() - source.getZ();
+                    float magnitude = (float) Math.hypot(dx, dz);
+
+                    fallingBlock.setVelocity(new Vector(dx / magnitude, Math.random() * 0.5 + 0.5, dz / magnitude));
                     fallingBlock.setDropItem(false);
                 }
             }
