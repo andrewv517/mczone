@@ -349,7 +349,7 @@ public class Arena {
         Material[] materials = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE, Material.LAPIS_LAZULI};
 
         // 5% chance of really good stuff(golden apples, etc.)
-        Material[] op = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE};
+        Material[] op = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE, Material.TNT};
 
         Random random = new Random();
 
