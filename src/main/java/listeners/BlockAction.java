@@ -26,6 +26,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
 
+import java.util.Iterator;
 import java.util.Objects;
 
 public class BlockAction implements Listener {
@@ -82,12 +83,14 @@ public class BlockAction implements Listener {
     public boolean onBlockExplode(BlockExplodeEvent event) {
 
         Block source = event.getBlock();
-
-        for (Block block : event.blockList()) {
+        Iterator<Block> iterator = event.blockList().iterator();
+        while (iterator.hasNext()) {
+            Block block = iterator.next();
             Arena arena = survivalMain.getArenaManager().getArenaWithLocation(block.getLocation());
             if (arena != null) {
                 if (block.getType() == Material.GLASS) {
-                    event.setCancelled(true);
+                    // this line could be moved to remove all blocks to keep exploded blocks from dropping items
+                    iterator.remove();
                 } else {
                     if (!arena.getExplodedBlocks().containsKey(block) && !arena.getFallenBlocks().contains(block.getLocation())) {
                         arena.addExplodedBlock(block, block.getBlockData());
@@ -98,9 +101,14 @@ public class BlockAction implements Listener {
                     // currently this just gives all blocks a positive y-velocity, that could be changed if desired
                     float dx = block.getX() - source.getX();
                     float dz = block.getZ() - source.getZ();
-                    float magnitude = (float) Math.hypot(dx, dz);
+                    double velocity = 0.5;
+                    double magnitude = Math.hypot(dx, dz) / velocity;
+                    if (magnitude != 0) {
+                        dx /= magnitude;
+                        dz /= magnitude;
+                    }
 
-                    fallingBlock.setVelocity(new Vector(dx / magnitude, Math.random() * 0.5 + 0.5, dz / magnitude));
+                    fallingBlock.setVelocity(new Vector(dx, Math.random() * 0.5 + 0.5, dz));
                     fallingBlock.setDropItem(false);
                 }
             }
