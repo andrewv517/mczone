@@ -53,7 +53,7 @@ public class DeathAction implements Listener {
         Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(player);
         List<Player> gulag = arena.getPlayersInGulagMatch();
 
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 10, 1);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 10, 1);
 
         if (gulag.contains(player)) {
             arena.getPlayersInGulagMatch().remove(player);
@@ -87,10 +87,10 @@ public class DeathAction implements Listener {
             }
         }
 
-        // CHANGE BELOW TO 4
         if (arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3 && !arena.getPastGulag().contains(player)) {
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " is going to the gulag!");
             arena.addPlayerToGulag(player);
+            startGulagTimer(player);
         } else {
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " died!");
             player.getInventory().clear();
@@ -121,12 +121,12 @@ public class DeathAction implements Listener {
                 return;
             }
 
-            if (size != arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) {
-                stopGulagTimer();
+            if (gulagTimer == 60 || gulagTimer == 120) {
+                p.sendMessage(ChatColor.GOLD + "If no one is sent to the gulag in " + gulagTimer / 60 +  " minute(s), you will be redeployed!");
             }
 
-            if (gulagTimer == 60) {
-                p.sendMessage(ChatColor.GOLD + "If no one is sent to the gulag in 1 minute, you will be redeployed!");
+            if (survivalMain.getArenaManager().getArenaWithPlayer(p).getPlayersInGulagMatch().contains(p)) {
+                stopGulagTimer();
             }
 
             gulagTimer--;
