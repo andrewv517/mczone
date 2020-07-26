@@ -71,8 +71,8 @@ public class BlockAction implements Listener {
                             .spawn(Utils.offsetLocation(block.getLocation(), 0.5f, 0.5f, 0.5f), TNTPrimed.class);
                 } else {
                     event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
+                    event.setCancelled(true);
                 }
-                event.setCancelled(true);
                 return true;
             }
         }
