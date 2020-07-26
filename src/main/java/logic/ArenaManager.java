@@ -1,5 +1,6 @@
 package logic;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -72,6 +73,15 @@ public class ArenaManager {
                         return a;
                     }
                 }
+            }
+        }
+        return null;
+    }
+
+    public Arena getArenaWithLocation(Location loc) {
+        for (Arena arena : this.arenas) {
+            if (Utils.isInside(loc, arena.getRegion())) {
+                return arena;
             }
         }
         return null;

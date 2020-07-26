@@ -1,15 +1,16 @@
 package logic;
 
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import com.sun.deploy.net.MessageHeader;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
 import survivalgames.main.SurvivalMain;
@@ -23,6 +24,7 @@ public class Arena {
     private final Region region;
     private final String name;
     private final Map<Location, Boolean> spawnPoints;
+    private final World world;
 
     // for grace period
     private int timer;
@@ -40,6 +42,8 @@ public class Arena {
     private final boolean gulagFreezePeriod = true;
     private final List<Player> playersInGulagMatch;
     private final List<Player> pastGulag;
+    private final Map<Block, BlockData> explodedBlocks;
+    private final List<Location> fallenBlocks;
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
@@ -49,11 +53,14 @@ public class Arena {
         this.region = region;
         this.name = name;
         this.spawnPoints = new HashMap<>();
+        this.world = Bukkit.getWorld(Objects.requireNonNull(region.getWorld()).getName()); // TODO: find a better way to do this
         this.survivalMain = SurvivalMain.survivalMain;
         this.playersInGulag = new ArrayList<>();
         this.playersInGulagMatch = new ArrayList<>();
         this.pastGulag = new ArrayList<>();
         this.borderSize = borderSize;
+        this.explodedBlocks = new HashMap<>();
+        this.fallenBlocks = new ArrayList<>();
     }
 
     public void addPlayer(Player player) {
@@ -78,6 +85,22 @@ public class Arena {
 
     public boolean isFreezePeriod() {
         return freezePeriod;
+    }
+
+    public void addExplodedBlock(Block block, BlockData data) {
+        this.explodedBlocks.put(block, data);
+    }
+
+    public Map<Block, BlockData> getExplodedBlocks() {
+        return explodedBlocks;
+    }
+
+    public void addFallenBlock(Location location) {
+        this.fallenBlocks.add(location);
+    }
+
+    public List<Location> getFallenBlocks() {
+        return fallenBlocks;
     }
 
     public void addPlayerToGulag(Player player) {
@@ -297,6 +320,77 @@ public class Arena {
 
         }, 0L, 20L);
 
+    }
+
+    public void prepareMap() {
+        // make sure to repair the map first in case a chest was destroyed.
+        repairMap();
+        fillChests();
+    }
+
+    private void fillChests() {
+
+
+        // 40% chance of food
+        Material[] food = {Material.COOKED_BEEF, Material.COOKED_CHICKEN, Material.COOKED_PORKCHOP};
+
+        // 20% chance of armor
+        Material[] armor = {Material.LEATHER_CHESTPLATE, Material.LEATHER_BOOTS, Material.LEATHER_HELMET,
+                Material.LEATHER_LEGGINGS, Material.IRON_HELMET, Material.IRON_CHESTPLATE, Material.IRON_LEGGINGS,
+                Material.IRON_BOOTS, Material.CHAINMAIL_HELMET, Material.CHAINMAIL_CHESTPLATE,
+                Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_HELMET, Material.GOLDEN_HELMET,
+                Material.GOLDEN_CHESTPLATE, Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS};
+
+        // 20% chance of weapon
+        Material[] weapon = {Material.WOODEN_SWORD, Material.STONE_AXE, Material.BOW, Material.ARROW,
+                Material.FISHING_ROD, Material.IRON_SWORD, Material.STONE_SWORD};
+
+        // 15% chance of materials(lapis, diamonds, sticks, xp bottles)
+        Material[] materials = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE, Material.LAPIS_LAZULI};
+
+        // 5% chance of really good stuff(golden apples, etc.)
+        Material[] op = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE, Material.TNT};
+
+        Random random = new Random();
+
+        for (Chunk chunk : this.world.getLoadedChunks()) {
+            for (BlockState entity : chunk.getTileEntities()) {
+                if (entity instanceof Chest && Utils.isInside(entity.getLocation(), this.getRegion())) {
+                    Chest chest = (Chest) entity;
+                    Inventory inventory = chest.getBlockInventory();
+                    inventory.clear();
+                    for (int i = 0; i < inventory.getSize() / 5; i++) {
+
+                        double num = random.nextDouble();
+
+                        if (num <= 0.4) {
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(food[random.nextInt(food.length)]));
+                        } else if (num <= 0.6) {
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(armor[random.nextInt(armor.length)]));
+                        } else if (num <= 0.8) {
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(weapon[random.nextInt(weapon.length)]));
+                        } else if (num <= 0.95) {
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(materials[random.nextInt(materials.length)]));
+                        } else {
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(op[random.nextInt(op.length)]));
+                        }
+
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void repairMap() {
+        // this must be done first otherwise we might overwrite an original block
+        for (Location location : fallenBlocks) {
+            Block block = location.getBlock();
+            block.setType(Material.AIR);
+        }
+        for (Block block : explodedBlocks.keySet()) {
+            block.setBlockData(explodedBlocks.get(block));
+        }
     }
 
 }

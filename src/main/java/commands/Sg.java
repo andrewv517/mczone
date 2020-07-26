@@ -5,6 +5,7 @@ import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import logic.Arena;
+import logic.Utils;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
@@ -176,6 +177,8 @@ public class Sg implements CommandExecutor {
                 }
             }
 
+            a.prepareMap();
+
             if (left > 0) {
                 for (Location location : a.getSpawnPoints().keySet()) {
                     // true means someone is there
@@ -209,7 +212,7 @@ public class Sg implements CommandExecutor {
             survivalMain.getArenaManager().getArenaWithPlayer(player).getSpawnPoints().replaceAll((l, v) -> false);
 
             setTimer(10);
-            fillChests(player.getWorld(), survivalMain.getArenaManager().getArenaWithPlayer(player));
+            survivalMain.getArenaManager().getArenaWithPlayer(player).prepareMap();
             startTimer(survivalMain.getArenaManager().getArenaWithPlayer(player));
             return true;
         } else if (args[0].equalsIgnoreCase("setcenter")) {
@@ -231,7 +234,7 @@ public class Sg implements CommandExecutor {
 
             Location center = player.getLocation();
             Arena arena = survivalMain.getArenaManager().getArena(args[1]);
-            if (!isInside(center, arena.getRegion())) {
+            if (!Utils.isInside(center, arena.getRegion())) {
                 sender.sendMessage(ChatColor.RED + "Center point needs to be inside the arena!");
                 return true;
             }
@@ -240,6 +243,17 @@ public class Sg implements CommandExecutor {
             sender.sendMessage(ChatColor.GOLD + "Center successfully set.");
             return true;
 
+        } else if (args[0].equalsIgnoreCase("prepare")) {
+            if (args.length != 2) {
+                sender.sendMessage(ChatColor.RED + "Incorrect command usage! While inside an arena, try /sg repair [name of arena]");
+            }
+            if (!survivalMain.getArenaManager().containsBasedOnName(args[1])) {
+                sender.sendMessage(ChatColor.RED + "No arena named \"" + args[1] + "\"!");
+                return true;
+            }
+            Arena arena = survivalMain.getArenaManager().getArena(args[1]);
+            arena.prepareMap();
+            return true;
         }
 
         sender.sendMessage(ChatColor.RED + "Not a command!");
@@ -247,20 +261,6 @@ public class Sg implements CommandExecutor {
 
     }
 
-    public boolean isInside(Location location, Region region) {
-
-        BlockVector3 min = region.getMinimumPoint();
-        BlockVector3 max = region.getMaximumPoint();
-
-        return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX()) &&
-                inBetween(location.getBlockY(), min.getBlockY(), max.getBlockY()) &&
-                inBetween(location.getBlockZ(), min.getBlockZ(), max.getBlockZ());
-
-    }
-
-    public boolean inBetween(int test, int x, int y) {
-        return x <= test && y >= test;
-    }
 
     public void startGame(Arena arena) {
         for (Player p : arena.getPlayers()) {
@@ -303,58 +303,4 @@ public class Sg implements CommandExecutor {
 
     }
 
-    public void fillChests(World world, Arena arena) {
-
-
-        // 40% chance of food
-        Material[] food = {Material.COOKED_BEEF, Material.COOKED_CHICKEN, Material.COOKED_PORKCHOP};
-
-        // 20% chance of armor
-        Material[] armor = {Material.LEATHER_CHESTPLATE, Material.LEATHER_BOOTS, Material.LEATHER_HELMET,
-                Material.LEATHER_LEGGINGS, Material.IRON_HELMET, Material.IRON_CHESTPLATE, Material.IRON_LEGGINGS,
-                Material.IRON_BOOTS, Material.CHAINMAIL_HELMET, Material.CHAINMAIL_CHESTPLATE,
-                Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_HELMET, Material.GOLDEN_HELMET,
-                Material.GOLDEN_CHESTPLATE, Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS};
-
-        // 20% chance of weapon
-        Material[] weapon = {Material.WOODEN_SWORD, Material.STONE_AXE, Material.BOW, Material.ARROW,
-                Material.FISHING_ROD, Material.IRON_SWORD, Material.STONE_SWORD};
-
-        // 15% chance of materials(lapis, diamonds, sticks, xp bottles)
-        Material[] materials = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE, Material.LAPIS_LAZULI};
-
-        // 5% chance of really good stuff(golden apples, etc.)
-        Material[] op = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE};
-
-        Random random = new Random();
-
-        for (Chunk chunk : world.getLoadedChunks()) {
-            for (BlockState entity : chunk.getTileEntities()) {
-                if (entity instanceof Chest && isInside(entity.getLocation(), arena.getRegion())) {
-                    Chest chest = (Chest) entity;
-                    Inventory inventory = chest.getBlockInventory();
-                    inventory.clear();
-                    for (int i = 0; i < inventory.getSize() / 5; i++) {
-
-                        double num = random.nextDouble();
-
-                        if (num <= 0.4) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(food[random.nextInt(food.length)]));
-                        } else if (num <= 0.6) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(armor[random.nextInt(armor.length)]));
-                        } else if (num <= 0.8) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(weapon[random.nextInt(weapon.length)]));
-                        } else if (num <= 0.95) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(materials[random.nextInt(materials.length)]));
-                        } else {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(op[random.nextInt(op.length)]));
-                        }
-
-                    }
-                }
-            }
-        }
-
-        Bukkit.broadcastMessage(ChatColor.GREEN + "Chests refilled");
-    }
 }
