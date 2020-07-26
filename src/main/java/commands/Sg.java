@@ -132,6 +132,11 @@ public class Sg implements CommandExecutor {
                 return true;
             }
 
+            if (survivalMain.getArenaManager().getArena(args[1]).getCenter() == null) {
+                sender.sendMessage(ChatColor.RED + "Arena needs a center point!");
+                return true;
+            }
+
             if (survivalMain.getArenaManager().deleteBaseOnName(args[1])) {
                 sender.sendMessage(ChatColor.GOLD + "Arena \"" + args[1] + "\" deleted successfully!");
             } else {
