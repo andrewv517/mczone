@@ -110,6 +110,7 @@ public class DeathAction implements Listener {
         gulagID = scheduler.scheduleSyncRepeatingTask(survivalMain, () -> {
             if (gulagTimer == 0) {
                 arena.addPlayerToPastGulag(p);
+                arena.getPlayersInGulag().remove(p);
                 p.getInventory().clear();
                 p.setHealth(20);
                 p.setFoodLevel(20);
