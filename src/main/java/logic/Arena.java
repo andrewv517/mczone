@@ -354,7 +354,7 @@ public class Arena {
                 Material.GOLDEN_CHESTPLATE, Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS};
 
         // 20% chance of weapon
-        Material[] weapon = {Material.WOODEN_SWORD, Material.STONE_AXE, Material.BOW, Material.ARROW,
+        Material[] weapon = {Material.ARROW, Material.WOODEN_SWORD, Material.STONE_AXE, Material.BOW,
                 Material.FISHING_ROD, Material.IRON_SWORD, Material.STONE_SWORD};
 
         // 15% chance of materials(lapis, diamonds, sticks, xp bottles)
@@ -380,7 +380,14 @@ public class Arena {
                         } else if (num <= 0.6) {
                             inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(armor[random.nextInt(armor.length)]));
                         } else if (num <= 0.8) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(weapon[random.nextInt(weapon.length)]));
+                            int ran = random.nextInt(weapon.length);
+                            ItemStack item;
+                            if (ran == 0) {
+                                item = new ItemStack(Material.ARROW, 3);
+                            } else {
+                                item = new ItemStack(weapon[random.nextInt(weapon.length)]);
+                            }
+                            inventory.setItem(random.nextInt(inventory.getSize()), item);
                         } else if (num <= 0.95) {
                             inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(materials[random.nextInt(materials.length)]));
                         } else {

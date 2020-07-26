@@ -87,10 +87,12 @@ public class DeathAction implements Listener {
             }
         }
 
-        if (arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3 && !arena.getPastGulag().contains(player)) {
+        if ((arena.getPlayersInGulag().size() == 1 || arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3) && !arena.getPastGulag().contains(player)) {
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " is going to the gulag!");
             arena.addPlayerToGulag(player);
-            startGulagTimer(player);
+            if (arena.getPlayersInGulag().size() != 0) {
+                startGulagTimer(player);
+            }
         } else {
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " died!");
             player.getInventory().clear();
@@ -118,6 +120,7 @@ public class DeathAction implements Listener {
                 //teleport
                 p.teleport(arena.getRedeployLocation());
                 p.sendTitle(ChatColor.GOLD + "You have 20 seconds to re-deploy!", "Your elytra will be removed after", 10, 60, 10);
+                setTimer(20);
                 startTimer(p);
                 stopGulagTimer();
                 return;
