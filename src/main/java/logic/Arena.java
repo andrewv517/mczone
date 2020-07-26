@@ -195,6 +195,7 @@ public class Arena {
         this.removeWorldBorder(Objects.requireNonNull(this.getRedeployLocation().getWorld()).getWorldBorder());
         this.setFreezePeriod(true);
         this.removeDropsOnGround(Objects.requireNonNull(this.getCenter().getWorld()));
+        this.repairMap();
     }
 
     public void removeDropsOnGround(World world) {
