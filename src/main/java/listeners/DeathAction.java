@@ -110,6 +110,7 @@ public class DeathAction implements Listener {
         gulagID = scheduler.scheduleSyncRepeatingTask(survivalMain, () -> {
             if (gulagTimer == 0) {
                 arena.addPlayerToPastGulag(p);
+                arena.getPlayersInGulag().remove(p);
                 p.getInventory().clear();
                 p.setHealth(20);
                 p.setFoodLevel(20);
@@ -117,6 +118,7 @@ public class DeathAction implements Listener {
                 //teleport
                 p.teleport(arena.getRedeployLocation());
                 p.sendTitle(ChatColor.GOLD + "You have 20 seconds to re-deploy!", "Your elytra will be removed after", 10, 60, 10);
+                startTimer(p);
                 stopGulagTimer();
                 return;
             }
@@ -127,6 +129,7 @@ public class DeathAction implements Listener {
 
             if (survivalMain.getArenaManager().getArenaWithPlayer(p).getPlayersInGulagMatch().contains(p)) {
                 stopGulagTimer();
+                return;
             }
 
             gulagTimer--;

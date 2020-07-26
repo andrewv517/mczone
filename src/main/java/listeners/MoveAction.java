@@ -49,6 +49,8 @@ public class MoveAction implements Listener {
 
         Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(damager);
 
+        if (arena == null) return true;
+
         if (arena.isGracePeriod() || arena.isFreezePeriod()) {
             event.setCancelled(true);
             damager.sendMessage(ChatColor.RED + "No PvP during grace period!");
