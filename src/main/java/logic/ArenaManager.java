@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ArenaManager {
 
@@ -44,6 +45,8 @@ public class ArenaManager {
         if (!containsBasedOnName(name)) return false;
 
         getArena(name).stopTimer();
+        getArena(name).stopWorldBorderTimer();
+        Objects.requireNonNull(getArena(name).getCenter().getWorld()).getWorldBorder().setSize(30000000);
         this.arenas.remove(getArena(name));
         return true;
 
