@@ -6,12 +6,24 @@ import org.bukkit.Location;
 
 public class Utils {
 
+    // y-level doesn't matter
     public static boolean isInside(Location location, Region region) {
 
         BlockVector3 min = region.getMinimumPoint();
         BlockVector3 max = region.getMaximumPoint();
 
         return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX())  &&
+                inBetween(location.getBlockZ(), min.getBlockZ(), max.getBlockZ());
+
+    }
+
+    // y-level does matter
+    public static boolean isStrictlyInside(Location location, Region region) {
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
+
+        return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX())  &&
+                inBetween(location.getBlockY(), min.getBlockY(), max.getBlockY()) &&
                 inBetween(location.getBlockZ(), min.getBlockZ(), max.getBlockZ());
 
     }

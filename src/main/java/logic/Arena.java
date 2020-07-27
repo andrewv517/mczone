@@ -52,6 +52,7 @@ public class Arena {
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
+    private Region plane = null;
     // 40% chance of food
     private static final Material[] FOOD = {Material.COOKED_BEEF, Material.COOKED_CHICKEN, Material.COOKED_PORKCHOP};
 
@@ -97,6 +98,14 @@ public class Arena {
         player.setTotalExperience(0);
         player.setLevel(0);
         this.freezePeriod = true;
+    }
+
+    public void setPlane(Region plane) {
+        this.plane = plane;
+    }
+
+    public Region getPlane() {
+        return plane;
     }
 
     public void setCenter(Location location) {
@@ -237,6 +246,9 @@ public class Arena {
 
     public void endGracePeriod() {
         this.gracePeriod = false;
+
+        // prevent ConcurrentModificationException
+        List<Player> playersInsidePlane = new ArrayList<>();
         for (Player p : this.getPlayers()) {
             if (p.getInventory().getChestplate() != null && p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
                 p.getInventory().setChestplate(new ItemStack(Material.AIR));
@@ -246,6 +258,15 @@ public class Arena {
                 p.getInventory().remove(Material.ELYTRA);
             }
 
+            if (Utils.isStrictlyInside(p.getLocation(), this.getPlane())) {
+                playersInsidePlane.add(p);
+            }
+        }
+
+        for (Player p : playersInsidePlane) {
+            p.damage(20);
+            p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 10, 1);
+            Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " did not jump in time!");
         }
 
         World world = this.getCenter().getWorld();

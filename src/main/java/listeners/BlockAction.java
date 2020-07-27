@@ -5,10 +5,7 @@ import com.sk89q.worldedit.regions.Region;
 import logic.Arena;
 import logic.ArenaExplosion;
 import logic.Utils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -40,6 +37,8 @@ public class BlockAction implements Listener {
     @EventHandler
     public boolean onBlockBreak(BlockBreakEvent event) {
 
+        if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) return false;
+
         if (survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()) != null
                 && (survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()).getPlayersInGulag().contains(event.getPlayer()) ||
                 survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()).getPlayersInGulagMatch().contains(event.getPlayer()))) {
@@ -60,6 +59,9 @@ public class BlockAction implements Listener {
 
     @EventHandler
     public boolean onBlockPlace(BlockPlaceEvent event) {
+
+        if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) return false;
+
         for (Arena a : survivalMain.getArenaManager().getArenas()) {
             if (isInside(event.getBlock().getLocation(), a.getRegion())) {
 

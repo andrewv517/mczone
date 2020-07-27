@@ -1,6 +1,7 @@
 package listeners;
 
 import logic.Arena;
+import logic.Utils;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
@@ -46,7 +47,6 @@ public class DeathAction implements Listener {
         return false;
 
     }
-
 
     public void handleDeath(Player player) {
 
@@ -119,6 +119,7 @@ public class DeathAction implements Listener {
             }
         }
 
+
         if ((arena.getPlayersInGulag().size() == 1 ||
                 arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3)
                 && !arena.getPastGulag().contains(player)) {
@@ -154,7 +155,7 @@ public class DeathAction implements Listener {
                 p.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
                 //teleport
                 p.teleport(arena.getRedeployLocation());
-                p.sendTitle(ChatColor.GOLD + "You have 20 seconds to re-deploy!", "Your elytra will be removed after", 10, 60, 10);
+                p.sendTitle(ChatColor.GOLD + "You have 20 seconds to re-deploy!", "You will be killed if you do not jump!", 10, 60, 10);
                 setTimer(20);
                 startTimer(p);
                 stopGulagTimer();
@@ -207,6 +208,14 @@ public class DeathAction implements Listener {
 
                 if (p.getInventory().contains(Material.ELYTRA)) {
                     p.getInventory().remove(Material.ELYTRA);
+                }
+
+                Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(p);
+
+                if (Utils.isStrictlyInside(p.getLocation(), arena.getPlane())) {
+                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 10, 1);
+                    Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " did not jump in time!");
+                    p.damage(20);
                 }
                 stopTimer();
                 return;

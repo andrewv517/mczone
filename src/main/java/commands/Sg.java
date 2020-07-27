@@ -168,6 +168,11 @@ public class Sg implements CommandExecutor {
                 return true;
             }
 
+            if (a.getPlane() == null) {
+                sender.sendMessage(ChatColor.RED + "Arena needs a plane location!");
+                return true;
+            }
+
             if (!a.isFreezePeriod()) {
                 player.sendMessage(ChatColor.RED + "Game is in progress!");
                 return true;
@@ -259,6 +264,39 @@ public class Sg implements CommandExecutor {
             Arena arena = survivalMain.getArenaManager().getArena(args[1]);
             arena.prepareMap();
             return true;
+        } else if (args[0].equalsIgnoreCase("setplane")) {
+            if (args.length != 2) {
+                sender.sendMessage(ChatColor.RED + "Incorrect command usage! While inside an arena, try /sg setcenter [name of arena]");
+                return true;
+            }
+
+            if (survivalMain.getArenaManager().playerInGame(player)) {
+                sender.sendMessage(ChatColor.RED + "You're already in a game!");
+                return true;
+            }
+
+            if (!survivalMain.getArenaManager().containsBasedOnName(args[1])) {
+                sender.sendMessage(ChatColor.RED + "No arena named \"" + args[1] + "\"!");
+                return true;
+            }
+
+            try {
+                LocalSession s = survivalMain.getWorldEditPlugin().getSession(player);
+                if (s.getSelectionWorld() == null) {
+                    sender.sendMessage(ChatColor.RED + "Make a selection with WorldEdit!");
+                    return true;
+                }
+                Region r = s.getSelection(s.getSelectionWorld());
+                survivalMain.getArenaManager().getArena(args[1]).setPlane(r);
+
+                sender.sendMessage(ChatColor.GOLD + "Plane location successfully created.");
+                return true;
+
+            } catch (IncompleteRegionException e) {
+                sender.sendMessage(ChatColor.RED + "Incomplete Selection!");
+                return true;
+            }
+
         }
 
         sender.sendMessage(ChatColor.RED + "Not a command!");
