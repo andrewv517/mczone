@@ -158,7 +158,6 @@ public class BlockAction implements Listener {
         BlockVector3 max = region.getMaximumPoint();
 
         return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX()) &&
-                inBetween(location.getBlockY(), min.getBlockY(), max.getBlockY()) &&
                 inBetween(location.getBlockZ(), min.getBlockZ(), max.getBlockZ());
 
     }

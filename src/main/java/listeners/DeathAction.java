@@ -89,10 +89,10 @@ public class DeathAction implements Listener {
 
         if ((arena.getPlayersInGulag().size() == 1 || arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3) && !arena.getPastGulag().contains(player)) {
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " is going to the gulag!");
-            arena.addPlayerToGulag(player);
-            if (arena.getPlayersInGulag().size() != 0) {
+            if (arena.getPlayersInGulag().size() == 0) {
                 startGulagTimer(player);
             }
+            arena.addPlayerToGulag(player);
         } else {
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " died!");
             player.getInventory().clear();
