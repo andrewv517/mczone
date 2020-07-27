@@ -17,9 +17,6 @@ public final class SurvivalMain extends JavaPlugin {
     private WorldEditPlugin worldEditPlugin;
     private ArenaManager arenaManager;
 
-    public static void main(String[] args) {
-    }
-
     @Override
     public void onEnable() {
         survivalMain = this;
