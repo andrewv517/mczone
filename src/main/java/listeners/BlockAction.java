@@ -71,8 +71,8 @@ public class BlockAction implements Listener {
                             .spawn(Utils.offsetLocation(block.getLocation(), 0.5f, 0.5f, 0.5f), TNTPrimed.class);
                 } else {
                     event.getPlayer().sendMessage(ChatColor.RED + "Cannot place blocks inside arena!");
+                    event.setCancelled(true);
                 }
-                event.setCancelled(true);
                 return true;
             }
         }
@@ -158,7 +158,6 @@ public class BlockAction implements Listener {
         BlockVector3 max = region.getMaximumPoint();
 
         return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX()) &&
-                inBetween(location.getBlockY(), min.getBlockY(), max.getBlockY()) &&
                 inBetween(location.getBlockZ(), min.getBlockZ(), max.getBlockZ());
 
     }

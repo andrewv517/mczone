@@ -11,8 +11,7 @@ public class Utils {
         BlockVector3 min = region.getMinimumPoint();
         BlockVector3 max = region.getMaximumPoint();
 
-        return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX()) &&
-                inBetween(location.getBlockY(), min.getBlockY(), max.getBlockY()) &&
+        return inBetween(location.getBlockX(), min.getBlockX(), max.getBlockX())  &&
                 inBetween(location.getBlockZ(), min.getBlockZ(), max.getBlockZ());
 
     }
