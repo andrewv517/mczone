@@ -59,6 +59,8 @@ public class DeathAction implements Listener {
             arena.getPlayersInGulagMatch().remove(player);
             Player other = arena.getPlayersInGulagMatch().get(0);
 
+            arena.getPlayersInGulagMatch().clear();
+
             Bukkit.broadcastMessage(ChatColor.GOLD + other.getName() + " is back in!");
             Bukkit.broadcastMessage(ChatColor.GOLD + player.getName() + " is out! " + (arena.getPlayers().size() - 1) + " players remain!");
             arena.removePlayer(player);
@@ -87,7 +89,10 @@ public class DeathAction implements Listener {
             }
         }
 
-        if ((arena.getPlayersInGulag().size() == 1 || arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3) && !arena.getPastGulag().contains(player)) {
+        if ((arena.getPlayersInGulag().size() == 1 ||
+                arena.getPlayers().size() - (arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size()) >= 3)
+                && !arena.getPastGulag().contains(player)) {
+
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + player.getName() + " is going to the gulag!");
             if (arena.getPlayersInGulag().size() == 0) {
                 startGulagTimer(player);

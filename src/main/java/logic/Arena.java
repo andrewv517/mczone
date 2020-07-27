@@ -132,6 +132,7 @@ public class Arena {
         player.getActivePotionEffects().clear();
         player.setFireTicks(0);
         player.setHealth(20);
+        player.setFoodLevel(20);
 
         if (this.playersInGulag.size() >= 2 && this.playersInGulagMatch.isEmpty()) {
             Location side1 = new Location(player.getWorld(), 147, 43, -569);
@@ -190,7 +191,6 @@ public class Arena {
 
     public void removePlayer(Player player) {
         this.playersInGulag.remove(player);
-        this.playersInGulagMatch.clear();
         this.players.remove(player);
         if (this.players.size() <= 1) {
             end();
