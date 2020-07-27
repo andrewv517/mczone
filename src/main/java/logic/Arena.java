@@ -52,6 +52,25 @@ public class Arena {
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
+    // 40% chance of food
+    private static final Material[] FOOD = {Material.COOKED_BEEF, Material.COOKED_CHICKEN, Material.COOKED_PORKCHOP};
+
+    // 20% chance of armor
+    private static final Material[] ARMOR = {Material.LEATHER_CHESTPLATE, Material.LEATHER_BOOTS, Material.LEATHER_HELMET,
+            Material.LEATHER_LEGGINGS, Material.IRON_HELMET, Material.IRON_CHESTPLATE, Material.IRON_LEGGINGS,
+            Material.IRON_BOOTS, Material.CHAINMAIL_HELMET, Material.CHAINMAIL_CHESTPLATE,
+            Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_HELMET, Material.GOLDEN_HELMET,
+            Material.GOLDEN_CHESTPLATE, Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS};
+
+    // 20% chance of weapon
+    private static final Material[] WEAPON = {Material.ARROW, Material.WOODEN_SWORD, Material.STONE_AXE, Material.BOW,
+            Material.FISHING_ROD, Material.IRON_SWORD, Material.STONE_SWORD};
+
+    // 15% chance of materials(lapis, diamonds, sticks, xp bottles)
+    private static final Material[] MATERIALS = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE, Material.LAPIS_LAZULI};
+
+    // 5% chance of really good stuff(golden apples, etc.)
+    private static final Material[] OP = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE, Material.TNT};
 
     public Arena(Region region, String name, double borderSize) {
         this.players = new ArrayList<>();
@@ -255,6 +274,7 @@ public class Arena {
 
 
             if (time == 0) {
+                fillChests();
                 // grace period over
                 if (worldBorder.getSize() <= 76) {
                     Bukkit.getScheduler().cancelTask(otherID);
@@ -343,27 +363,6 @@ public class Arena {
 
     private void fillChests() {
 
-
-        // 40% chance of food
-        Material[] food = {Material.COOKED_BEEF, Material.COOKED_CHICKEN, Material.COOKED_PORKCHOP};
-
-        // 20% chance of armor
-        Material[] armor = {Material.LEATHER_CHESTPLATE, Material.LEATHER_BOOTS, Material.LEATHER_HELMET,
-                Material.LEATHER_LEGGINGS, Material.IRON_HELMET, Material.IRON_CHESTPLATE, Material.IRON_LEGGINGS,
-                Material.IRON_BOOTS, Material.CHAINMAIL_HELMET, Material.CHAINMAIL_CHESTPLATE,
-                Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_HELMET, Material.GOLDEN_HELMET,
-                Material.GOLDEN_CHESTPLATE, Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS};
-
-        // 20% chance of weapon
-        Material[] weapon = {Material.WOODEN_SWORD, Material.STONE_AXE, Material.BOW, Material.ARROW,
-                Material.FISHING_ROD, Material.IRON_SWORD, Material.STONE_SWORD};
-
-        // 15% chance of materials(lapis, diamonds, sticks, xp bottles)
-        Material[] materials = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE, Material.LAPIS_LAZULI};
-
-        // 5% chance of really good stuff(golden apples, etc.)
-        Material[] op = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE, Material.TNT};
-
         Random random = new Random();
 
         for (Chunk chunk : this.world.getLoadedChunks()) {
@@ -377,15 +376,22 @@ public class Arena {
                         double num = random.nextDouble();
 
                         if (num <= 0.4) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(food[random.nextInt(food.length)]));
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(FOOD[random.nextInt(FOOD.length)]));
                         } else if (num <= 0.6) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(armor[random.nextInt(armor.length)]));
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(ARMOR[random.nextInt(ARMOR.length)]));
                         } else if (num <= 0.8) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(weapon[random.nextInt(weapon.length)]));
+                            int ran = random.nextInt(WEAPON.length);
+                            ItemStack item;
+                            if (ran == 0) {
+                                item = new ItemStack(Material.ARROW, 3);
+                            } else {
+                                item = new ItemStack(WEAPON[random.nextInt(WEAPON.length)]);
+                            }
+                            inventory.setItem(random.nextInt(inventory.getSize()), item);
                         } else if (num <= 0.95) {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(materials[random.nextInt(materials.length)]));
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(MATERIALS[random.nextInt(MATERIALS.length)]));
                         } else {
-                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(op[random.nextInt(op.length)]));
+                            inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(OP[random.nextInt(OP.length)]));
                         }
 
                     }
