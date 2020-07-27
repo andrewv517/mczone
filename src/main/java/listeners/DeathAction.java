@@ -79,6 +79,36 @@ public class DeathAction implements Listener {
             setTimer(20);
             startTimer(other);
 
+            if (arena.getPlayersInGulag().size() >= 2 && arena.getPlayersInGulagMatch().isEmpty()) {
+                Location side1 = new Location(player.getWorld(), 147, 43, -569);
+                Location side2 = new Location(player.getWorld(), 147, 43, -598);
+
+                arena.getPlayersInGulag().get(0).teleport(side1);
+                arena.getPlayersInGulag().get(1).teleport(side2);
+
+                arena.getPlayersInGulag().get(0).getInventory().clear();
+                arena.getPlayersInGulag().get(1).getInventory().clear();
+
+                arena.getPlayersInGulagMatch().add(arena.getPlayersInGulag().get(0));
+                arena.getPlayersInGulagMatch().add(arena.getPlayersInGulag().get(1));
+
+                arena.getPlayersInGulag().remove(0);
+                arena.getPlayersInGulag().remove(0);
+
+
+                for (Player p : arena.getPlayersInGulagMatch()) {
+                    p.getInventory().clear();
+                    p.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
+                    p.getInventory().setItem(1, new ItemStack(Material.BOW));
+                    p.getInventory().setItem(2, new ItemStack(Material.ARROW, 10));
+                    p.getInventory().setChestplate(new ItemStack(Material.LEATHER_CHESTPLATE));
+                    p.getInventory().setHelmet(new ItemStack(Material.LEATHER_HELMET));
+                    p.getInventory().setLeggings(new ItemStack(Material.LEATHER_LEGGINGS));
+                    p.getInventory().setBoots(new ItemStack(Material.LEATHER_BOOTS));
+                    p.setHealth(20);
+                    p.setFoodLevel(20);
+                }
+            }
             return;
         }
 
