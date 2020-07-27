@@ -7,10 +7,7 @@ import logic.ArenaExplosion;
 import logic.Utils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -20,6 +17,9 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
 
@@ -151,6 +151,30 @@ public class BlockAction implements Listener {
 
         return true;
 
+    }
+
+    @EventHandler
+    public boolean onItemDrop(PlayerDropItemEvent event) {
+        if (survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()) != null &&
+                event.getItemDrop().getItemStack().getType().equals(Material.ELYTRA)) {
+            event.setCancelled(true);
+            return true;
+        }
+        return false;
+    }
+
+    @EventHandler
+    public boolean onInventoryClickEvent(InventoryClickEvent event) {
+
+        Player p = (Player) event.getWhoClicked();
+
+        if (survivalMain.getArenaManager().getArenaWithPlayer(p) != null &&
+                event.getCurrentItem() != null && event.getCurrentItem().getType().equals(Material.ELYTRA)) {
+            event.setCancelled(true);
+            return true;
+        }
+
+        return false;
     }
 
     // tests if location is inside region

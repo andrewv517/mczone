@@ -220,7 +220,7 @@ public class Arena {
         this.getPlayersInGulagMatch().clear();
         this.getPlayersInGulag().clear();
         this.getPastGulag().clear();
-        this.removeWorldBorder(Objects.requireNonNull(this.getRedeployLocation().getWorld()).getWorldBorder());
+        this.removeWorldBorder(Objects.requireNonNull(this.getCenter().getWorld()).getWorldBorder());
         this.setFreezePeriod(true);
         this.removeDropsOnGround(Objects.requireNonNull(this.getCenter().getWorld()));
         this.repairMap();
@@ -247,6 +247,13 @@ public class Arena {
     public void endGracePeriod() {
         this.gracePeriod = false;
 
+        World world = this.getCenter().getWorld();
+        assert world != null;
+        world.getWorldBorder().setCenter(this.getCenter());
+
+        world.getWorldBorder().setSize(this.borderSize);
+        startWorldBorderTimer(240, world.getWorldBorder());
+
         // prevent ConcurrentModificationException
         List<Player> playersInsidePlane = new ArrayList<>();
         for (Player p : this.getPlayers()) {
@@ -268,13 +275,6 @@ public class Arena {
             p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 10, 1);
             Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " did not jump in time!");
         }
-
-        World world = this.getCenter().getWorld();
-        assert world != null;
-        world.getWorldBorder().setCenter(this.getCenter());
-
-        world.getWorldBorder().setSize(this.borderSize);
-        startWorldBorderTimer(240, world.getWorldBorder());
     }
 
     public void removeWorldBorder(WorldBorder worldBorder) {
