@@ -18,6 +18,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Scoreboard;
 import survivalgames.main.SurvivalMain;
 
 import java.util.*;
@@ -297,10 +299,10 @@ public class Arena {
             if (time == 0) {
                 fillChests();
                 // grace period over
-                if (worldBorder.getSize() <= 76) {
-                    Bukkit.getScheduler().cancelTask(otherID);
-                    return;
-                }
+//                if (worldBorder.getSize() <= 76) {
+//                    Bukkit.getScheduler().cancelTask(otherID);
+//                    return;
+//                }
                 Bukkit.broadcastMessage(ChatColor.GOLD + "Border shrinking!");
                 worldBorder.setSize(worldBorder.getSize() / 2, 30);
                 this.time = interval;

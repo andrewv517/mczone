@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -188,6 +189,11 @@ public class DeathAction implements Listener {
         handleDeath(p);
         Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " has left! They have been eliminated");
         p.setGameMode(GameMode.SPECTATOR);
+    }
+
+    @EventHandler
+    public void onPlayerJoinEvent(PlayerJoinEvent event) {
+        event.getPlayer().setGameMode(GameMode.SPECTATOR);
     }
 
     public void setTimer(int timer) {
