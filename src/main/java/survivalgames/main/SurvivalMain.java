@@ -139,7 +139,7 @@ public final class SurvivalMain extends JavaPlugin {
     public void onDisable() {
 
         for (Arena arena : arenaManager.getArenas()) {
-            arenaManager.saveArena(arena);
+            arena.save();
         }
 
         saveConfig(arenaConfig, arenaConfigFile);
