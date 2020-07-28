@@ -108,6 +108,10 @@ public class Arena {
         return plane;
     }
 
+    public World getWorld() {
+        return world;
+    }
+
     public void setCenter(Location location) {
         this.center = location;
     }
