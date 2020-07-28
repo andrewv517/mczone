@@ -8,6 +8,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -21,8 +23,13 @@ import org.bukkit.scheduler.BukkitScheduler;
 import survivalgames.main.SurvivalMain;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class Arena {
+
+    private static final YamlConfiguration arenaConfig = SurvivalMain.survivalMain.getArenaConfig();
+    private static final long SAVE_INTERVAL = 100000;
+    private long lastSave;
 
     private final SurvivalMain survivalMain;
     List<Player> players;
@@ -86,6 +93,7 @@ public class Arena {
         this.borderSize = borderSize;
         this.explodedBlocks = new HashMap<>();
         this.fallenBlocks = new ArrayList<>();
+        this.lastSave = System.currentTimeMillis();
     }
 
     public void addPlayer(Player player) {
@@ -98,6 +106,14 @@ public class Arena {
         player.setTotalExperience(0);
         player.setLevel(0);
         this.freezePeriod = true;
+    }
+
+    public void setRedeployLocation(Location redeployLocation) {
+        this.redeployLocation = redeployLocation;
+    }
+
+    public double getBorderSize() {
+        return borderSize;
     }
 
     public void setPlane(Region plane) {
@@ -380,6 +396,10 @@ public class Arena {
 
     }
 
+    public boolean isStale() {
+        return System.currentTimeMillis() - lastSave > SAVE_INTERVAL;
+    }
+
     public void prepareMap() {
         // make sure to repair the map first in case a chest was destroyed.
         repairMap();
@@ -427,14 +447,97 @@ public class Arena {
     }
 
     private void repairMap() {
+
         // this must be done first otherwise we might overwrite an original block
         for (Location location : fallenBlocks) {
             Block block = location.getBlock();
             block.setType(Material.AIR);
         }
+
         for (Block block : explodedBlocks.keySet()) {
             block.setBlockData(explodedBlocks.get(block));
         }
+
+        fallenBlocks.clear();
+        explodedBlocks.clear();
+        save();
+
+    }
+
+    public boolean save() {
+
+        if (!this.isStale()) {
+            return false;
+        }
+
+        ConfigurationSection section = arenaConfig.getConfigurationSection("arenas." + this.getName());
+        if (section == null) {
+            section = arenaConfig.createSection(this.getName());
+        }
+        section.set("name", this.getName());
+        section.set("world", this.getWorld().getUID().toString());
+
+        int spawnCount = 0;
+        for (Location location : this.getSpawnPoints().keySet()) {
+            section.set("spawnpoints." + spawnCount + ".x", location.getX());
+            section.set("spawnpoints." + spawnCount + ".y", location.getY());
+            section.set("spawnpoints." + spawnCount + ".z", location.getZ());
+            spawnCount++;
+        }
+
+        section.set("borderSize", this.getBorderSize());
+
+        section.set("redeploy.x", this.getRedeployLocation().getX());
+        section.set("redeploy.y", this.getRedeployLocation().getY());
+        section.set("redeploy.z", this.getRedeployLocation().getZ());
+
+        section.set("center.x", this.getCenter().getX());
+        section.set("center.y", this.getCenter().getY());
+        section.set("center.z", this.getCenter().getZ());
+
+        Region region = this.getRegion();
+
+        BlockVector3 minimum = region.getMinimumPoint();
+        section.set("minimum.x", minimum.getBlockX());
+        section.set("minimum.y", minimum.getBlockY());
+        section.set("minimum.z", minimum.getBlockZ());
+
+        BlockVector3 maximum = region.getMaximumPoint();
+        section.set("maximum.x", maximum.getBlockX());
+        section.set("maximum.y", maximum.getBlockY());
+        section.set("maximum.z", maximum.getBlockZ());
+
+        Region plane = this.getPlane();
+
+        BlockVector3 planeMin = plane.getMinimumPoint();
+        section.set("plane.min.x", planeMin.getBlockX());
+        section.set("plane.min.y", planeMin.getBlockY());
+        section.set("plane.min.z", planeMin.getBlockZ());
+
+        BlockVector3 planeMax = plane.getMaximumPoint();
+        section.set("plane.max.x", planeMax.getBlockX());
+        section.set("plane.max.y", planeMax.getBlockY());
+        section.set("plane.max.z", planeMax.getBlockZ());
+
+        for (int i = 0; i < this.getFallenBlocks().size(); i++) {
+            Location fallenBlock = this.getFallenBlocks().get(i);
+            section.set("fallenBlocks." + i + ".x", fallenBlock.getX());
+            section.set("fallenBlocks." + i + ".y", fallenBlock.getY());
+            section.set("fallenBlocks." + i + ".z", fallenBlock.getZ());
+        }
+
+        int blockCount = 0;
+        for (Block block : this.getExplodedBlocks().keySet()) {
+            Location location = block.getLocation();
+            section.set("explodedBlocks." + blockCount + ".location.x", location.getX());
+            section.set("explodedBlocks." + blockCount + ".location.y", location.getY());
+            section.set("explodedBlocks." + blockCount + ".location.z", location.getZ());
+            section.set("explodedBlocks." + blockCount + ".data", block.getBlockData().getAsString());
+            blockCount++;
+        }
+
+        return true;
+
     }
 
 }

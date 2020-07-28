@@ -24,6 +24,7 @@ import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 public class BlockAction implements Listener {
@@ -112,6 +113,8 @@ public class BlockAction implements Listener {
 
                     fallingBlock.setVelocity(new Vector(dx, Math.random() * 0.5 + 0.5, dz));
                     fallingBlock.setDropItem(false);
+                    // TODO: reconsider if this is the best time to save the arena
+                    arena.save();
                 }
             }
         }
@@ -146,6 +149,8 @@ public class BlockAction implements Listener {
         if (arena != null) {
             if (entity instanceof FallingBlock) {
                 arena.addFallenBlock(entity.getLocation().getBlock().getLocation()); // get integer location
+                // TODO: reconsider if this is the best time to save the arena
+                arena.save();
             }
         }
 

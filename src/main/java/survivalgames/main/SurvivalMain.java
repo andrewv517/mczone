@@ -1,5 +1,6 @@
 package survivalgames.main;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
@@ -11,17 +12,25 @@ import listeners.MoveAction;
 import logic.Arena;
 import logic.ArenaManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.BlockVector;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public final class SurvivalMain extends JavaPlugin {
@@ -52,7 +61,75 @@ public final class SurvivalMain extends JavaPlugin {
         ConfigurationSection arenaConfigurationSection = arenaConfig.getConfigurationSection("arenas");
         if (arenaConfigurationSection != null) {
             for (String arenaName : arenaConfigurationSection.getKeys(false)) {
-                System.out.println(arenaName);
+
+                try {
+
+                    ConfigurationSection config = arenaConfigurationSection.getConfigurationSection(arenaName);
+                    World world = Bukkit.getWorld(UUID.fromString(config.getString("world")));
+                    double borderSize = config.getDouble("borderSize");
+
+                    BlockVector3 minimum = BlockVector3.at(config.getInt("minimum.x"), config.getInt("minimum.y"), config.getInt("minimum.z"));
+                    BlockVector3 maximum = BlockVector3.at(config.getInt("maximum.x"), config.getInt("maximum.y"), config.getInt("maximum.z"));
+                    Region region = new CuboidRegion(BukkitAdapter.adapt(world), minimum, maximum);
+
+                    Arena arena = new Arena(region, arenaName, borderSize);
+                    for (String spawnpoint : config.getConfigurationSection("spawnpoints").getKeys(false)) {
+                        Location location = new Location(world,
+                                config.getDouble("spawnpoints." + spawnpoint + ".x"),
+                                config.getDouble("spawnpoints." + spawnpoint + ".y"),
+                                config.getDouble("spawnpoints." + spawnpoint + ".z")
+                        );
+                        arena.addSpawnPoint(location);
+                    }
+
+                    for (String s : config.getConfigurationSection("fallenBlocks").getKeys(false)) {
+                        Location location = new Location(world,
+                                config.getDouble("fallenBlocks." + s + ".x"),
+                                config.getDouble("fallenBlocks." + s + ".y"),
+                                config.getDouble("fallenBlocks." + s + ".z")
+                        );
+                        arena.addFallenBlock(location);
+                    }
+
+                    for (String s : config.getConfigurationSection("explodedBlocks").getKeys(false)) {
+                        Location location = new Location(world,
+                                config.getDouble("explodedBlocks.location." + s + ".x"),
+                                config.getDouble("explodedBlocks.location." + s + ".y"),
+                                config.getDouble("explodedBlocks.location." + s + ".z")
+                        );
+                        arena.addExplodedBlock(location.getBlock(), Bukkit.createBlockData(config.getString("explodedBlocks." + s + ".data")));
+                    }
+
+                    arena.setRedeployLocation(new Location(world,
+                            config.getDouble("redeploy.x"),
+                            config.getDouble("redeploy.y"),
+                            config.getDouble("redeploy.z"))
+                    );
+
+                    arena.setCenter(new Location(world,
+                            config.getDouble("center.x"),
+                            config.getDouble("center.y"),
+                            config.getDouble("center.z"))
+                    );
+
+                    BlockVector3 planeMin = BlockVector3.at(
+                            config.getInt("plane.min.x"), config.getInt("plane.min.y"), config.getInt("plane.min.z")
+                    );
+                    BlockVector3 planeMax = BlockVector3.at(
+                            config.getInt("plane.max.x"), config.getInt("plane.max.y"), config.getInt("plane.max.z")
+                    );
+
+                    arena.setPlane(new CuboidRegion(BukkitAdapter.adapt(world), planeMin, planeMax));
+
+                    getArenaManager().addArena(arena);
+
+                    getLogger().log(Level.INFO, "Loaded arena " + arenaName);
+
+                } catch (Exception e) {
+                    getLogger().log(Level.WARNING, "Failed to load arena " + arenaName, e);
+                }
+
+
             }
         }
 
@@ -62,27 +139,7 @@ public final class SurvivalMain extends JavaPlugin {
     public void onDisable() {
 
         for (Arena arena : arenaManager.getArenas()) {
-
-            ConfigurationSection section = arenaConfig.getConfigurationSection("arenas." + arena.getName());
-            if (section == null) {
-                section = arenaConfig.createSection(arena.getName());
-            }
-            section.set("name", arena.getName());
-            section.set("world", arena.getWorld().getUID());
-
-            Region region = arena.getRegion();
-
-            BlockVector3 minimum = region.getMinimumPoint();
-            section.set("minimum.x", minimum.getBlockX());
-            section.set("minimum.y", minimum.getBlockY());
-            section.set("minimum.z", minimum.getBlockZ());
-
-            BlockVector3 maximum = region.getMaximumPoint();
-            section.set("maximum.x", maximum.getBlockX());
-            section.set("maximum.y", maximum.getBlockY());
-            section.set("maximum.z", maximum.getBlockZ());
-
-
+            arenaManager.saveArena(arena);
         }
 
         saveConfig(arenaConfig, arenaConfigFile);
@@ -96,6 +153,10 @@ public final class SurvivalMain extends JavaPlugin {
 
     public ArenaManager getArenaManager() {
         return arenaManager;
+    }
+
+    public YamlConfiguration getArenaConfig() {
+        return arenaConfig;
     }
 
     public YamlConfiguration loadConfig(String path) {
