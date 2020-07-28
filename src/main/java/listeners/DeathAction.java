@@ -115,7 +115,7 @@ public class DeathAction implements Listener {
 
         Location location = player.getLocation();
         for (ItemStack item : player.getInventory()) {
-            if (item != null) {
+            if (item != null && !item.getType().equals(Material.ELYTRA)) {
                 player.getWorld().dropItemNaturally(location, item);
             }
         }
@@ -218,7 +218,7 @@ public class DeathAction implements Listener {
 
                 Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(p);
 
-                if (Utils.isStrictlyInside(p.getLocation(), arena.getPlane())) {
+                if (arena != null && Utils.isStrictlyInside(p.getLocation(), arena.getPlane())) {
                     p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 10, 1);
                     Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " did not jump in time!");
                     p.damage(20);

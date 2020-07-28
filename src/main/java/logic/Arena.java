@@ -408,7 +408,7 @@ public class Arena {
                             if (ran == 0) {
                                 item = new ItemStack(Material.ARROW, 3);
                             } else {
-                                item = new ItemStack(WEAPON[random.nextInt(WEAPON.length)]);
+                                item = new ItemStack(WEAPON[random.nextInt(WEAPON.length - 1) + 1]);
                             }
                             inventory.setItem(random.nextInt(inventory.getSize()), item);
                         } else if (num <= 0.95) {

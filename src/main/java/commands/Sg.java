@@ -84,7 +84,8 @@ public class Sg implements CommandExecutor {
                     sender.sendMessage(ChatColor.RED + "Make a selection with WorldEdit!");
                     return true;
                 }
-                Region r = s.getSelection(s.getSelectionWorld());
+                Region reg = s.getSelection(s.getSelectionWorld());
+                Region r = reg.clone();
 
                 // implement checking if an arena already exists at those coordinates? don't feel like it rn
                 Arena a = new Arena(r, args[1], borderDiameter);
@@ -286,7 +287,8 @@ public class Sg implements CommandExecutor {
                     sender.sendMessage(ChatColor.RED + "Make a selection with WorldEdit!");
                     return true;
                 }
-                Region r = s.getSelection(s.getSelectionWorld());
+                Region reg = s.getSelection(s.getSelectionWorld());
+                Region r = reg.clone();
                 survivalMain.getArenaManager().getArena(args[1]).setPlane(r);
 
                 sender.sendMessage(ChatColor.GOLD + "Plane location successfully created.");

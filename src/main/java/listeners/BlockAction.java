@@ -11,15 +11,15 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.block.*;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EnchantingInventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
 
@@ -164,15 +164,47 @@ public class BlockAction implements Listener {
     }
 
     @EventHandler
+    public void onInventoryOpenEvent(InventoryOpenEvent event) {
+        if (event.getInventory() instanceof EnchantingInventory) {
+            EnchantingInventory inv = (EnchantingInventory) event.getInventory();
+            inv.setItem(1, new ItemStack(Material.LAPIS_LAZULI, 3));
+        }
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getInventory() instanceof EnchantingInventory) {
+            EnchantingInventory inv = (EnchantingInventory) event.getInventory();
+            inv.clear();
+        }
+    }
+
+    @EventHandler
+    public void onEnchant(EnchantItemEvent event) {
+        if (event.getInventory() instanceof EnchantingInventory) {
+            EnchantingInventory inv = (EnchantingInventory) event.getInventory();
+            inv.setItem(1, new ItemStack(Material.LAPIS_LAZULI, 3));
+        }
+    }
+
+    @EventHandler
     public boolean onInventoryClickEvent(InventoryClickEvent event) {
 
         Player p = (Player) event.getWhoClicked();
+
+        if (p.getOpenInventory().getType().equals(InventoryType.ENCHANTING)) {
+            if (event.getCurrentItem() != null && event.getCurrentItem().getType().equals(Material.LAPIS_LAZULI)) {
+                event.setCancelled(true);
+                return true;
+            }
+        }
 
         if (survivalMain.getArenaManager().getArenaWithPlayer(p) != null &&
                 event.getCurrentItem() != null && event.getCurrentItem().getType().equals(Material.ELYTRA)) {
             event.setCancelled(true);
             return true;
         }
+
 
         return false;
     }
