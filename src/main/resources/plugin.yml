@@ -24,4 +24,10 @@ commands:
   sg prepare:
     description: Prepare an arena.
     usage: /<command> [name of arena]
+  sg setcenter:
+    description: Sets the center of an arena.
+    usage: /<command> [name of arena]
+  sg setplane:
+    description: Sets the plane location for an arena.
+    usage: /<command> [name of arena]
 depend: [WorldEdit]

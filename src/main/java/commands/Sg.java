@@ -267,7 +267,7 @@ public class Sg implements CommandExecutor {
             return true;
         } else if (args[0].equalsIgnoreCase("setplane")) {
             if (args.length != 2) {
-                sender.sendMessage(ChatColor.RED + "Incorrect command usage! While inside an arena, try /sg setcenter [name of arena]");
+                sender.sendMessage(ChatColor.RED + "Incorrect command usage! While inside an arena, try /sg setplane [name of arena]");
                 return true;
             }
 

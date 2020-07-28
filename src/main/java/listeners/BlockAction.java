@@ -175,7 +175,7 @@ public class BlockAction implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (event.getInventory() instanceof EnchantingInventory) {
             EnchantingInventory inv = (EnchantingInventory) event.getInventory();
-            inv.clear();
+            inv.remove(Material.LAPIS_LAZULI);
         }
     }
 

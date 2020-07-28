@@ -70,9 +70,9 @@ public class Arena {
             Material.FISHING_ROD, Material.IRON_SWORD, Material.STONE_SWORD};
 
     // 15% chance of materials(lapis, diamonds, sticks, xp bottles)
-    private static final Material[] MATERIALS = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE, Material.LAPIS_LAZULI};
+    private static final Material[] MATERIALS = {Material.IRON_INGOT, Material.DIAMOND, Material.STICK, Material.EXPERIENCE_BOTTLE};
 
-    // 5% chance of really good stuff(golden apples, etc.)
+    // 2% chance of really good stuff(golden apples, etc.)
     private static final Material[] OP = {Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.GOLDEN_APPLE, Material.TNT};
 
     public Arena(Region region, String name, double borderSize) {
@@ -411,7 +411,7 @@ public class Arena {
                                 item = new ItemStack(WEAPON[random.nextInt(WEAPON.length - 1) + 1]);
                             }
                             inventory.setItem(random.nextInt(inventory.getSize()), item);
-                        } else if (num <= 0.95) {
+                        } else if (num <= 0.98) {
                             inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(MATERIALS[random.nextInt(MATERIALS.length)]));
                         } else {
                             inventory.setItem(random.nextInt(inventory.getSize()), new ItemStack(OP[random.nextInt(OP.length)]));
