@@ -38,7 +38,7 @@ public final class SurvivalMain extends JavaPlugin {
     public static SurvivalMain survivalMain;
     private WorldEditPlugin worldEditPlugin;
     private ArenaManager arenaManager;
-    private static final String arenaConfigFile = "arenas.yml";
+    public static final String arenaConfigFile = "arenas.yml";
     private YamlConfiguration arenaConfig;
 
     @Override
@@ -93,9 +93,9 @@ public final class SurvivalMain extends JavaPlugin {
 
                     for (String s : config.getConfigurationSection("explodedBlocks").getKeys(false)) {
                         Location location = new Location(world,
-                                config.getDouble("explodedBlocks.location." + s + ".x"),
-                                config.getDouble("explodedBlocks.location." + s + ".y"),
-                                config.getDouble("explodedBlocks.location." + s + ".z")
+                                config.getDouble("explodedBlocks." + s + ".location." + ".x"),
+                                config.getDouble("explodedBlocks." + s + ".location." + ".y"),
+                                config.getDouble("explodedBlocks." + s + ".location." + ".z")
                         );
                         arena.addExplodedBlock(location.getBlock(), Bukkit.createBlockData(config.getString("explodedBlocks." + s + ".data")));
                     }
@@ -139,7 +139,8 @@ public final class SurvivalMain extends JavaPlugin {
     public void onDisable() {
 
         for (Arena arena : arenaManager.getArenas()) {
-            arena.save();
+            arena.save(true);
+            getLogger().log(Level.INFO, "Saved arena " + arena.getName());
         }
 
         saveConfig(arenaConfig, arenaConfigFile);
@@ -168,6 +169,7 @@ public final class SurvivalMain extends JavaPlugin {
             getLogger().log(Level.WARNING, "No configuration file found for " + path + ", creating one.");
             Reader defaultReader = new InputStreamReader(getResource(path));
             config = YamlConfiguration.loadConfiguration(defaultReader);
+            config.createSection("arenas"); // TODO: implement default values better
             try {
                 config.save(file);
             } catch (IOException e) {
@@ -183,7 +185,7 @@ public final class SurvivalMain extends JavaPlugin {
 
     public void saveConfig(YamlConfiguration config, String path) {
 
-        getLogger().log(Level.INFO, "Saving configuration file " + path);
+//        getLogger().log(Level.INFO, "Saving configuration file " + path);
 
         try {
             config.save(new File(getDataFolder(), path));

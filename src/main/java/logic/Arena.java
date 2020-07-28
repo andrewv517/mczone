@@ -28,7 +28,7 @@ import java.util.logging.Level;
 public class Arena {
 
     private static final YamlConfiguration arenaConfig = SurvivalMain.survivalMain.getArenaConfig();
-    private static final long SAVE_INTERVAL = 100000;
+    private static final long SAVE_INTERVAL = 10000;
     private long lastSave;
 
     private final SurvivalMain survivalMain;
@@ -93,7 +93,8 @@ public class Arena {
         this.borderSize = borderSize;
         this.explodedBlocks = new HashMap<>();
         this.fallenBlocks = new ArrayList<>();
-        this.lastSave = System.currentTimeMillis();
+        this.save(true);
+        this.lastSave = 0;
     }
 
     public void addPlayer(Player player) {
@@ -396,10 +397,6 @@ public class Arena {
 
     }
 
-    public boolean isStale() {
-        return System.currentTimeMillis() - lastSave > SAVE_INTERVAL;
-    }
-
     public void prepareMap() {
         // make sure to repair the map first in case a chest was destroyed.
         repairMap();
@@ -464,36 +461,51 @@ public class Arena {
 
     }
 
-    public boolean save() {
+    public boolean isStale() {
+        return System.currentTimeMillis() - lastSave > SAVE_INTERVAL;
+    }
 
-        if (!this.isStale()) {
+    public boolean save() {
+        return save(false);
+    }
+
+    public boolean save(boolean force) {
+
+        if (!force && !this.isStale()) {
             return false;
         }
 
-        ConfigurationSection section = arenaConfig.getConfigurationSection("arenas." + this.getName());
-        if (section == null) {
-            section = arenaConfig.createSection(this.getName());
-        }
+        lastSave = System.currentTimeMillis();
+
+        ConfigurationSection section = Utils.getConfigurationSection("arenas." + this.getName(), arenaConfig);
+
         section.set("name", this.getName());
         section.set("world", this.getWorld().getUID().toString());
 
+        ConfigurationSection spawnpoints = section.createSection("spawnpoints");
         int spawnCount = 0;
         for (Location location : this.getSpawnPoints().keySet()) {
-            section.set("spawnpoints." + spawnCount + ".x", location.getX());
-            section.set("spawnpoints." + spawnCount + ".y", location.getY());
-            section.set("spawnpoints." + spawnCount + ".z", location.getZ());
+            spawnpoints.set(spawnCount + ".x", location.getX());
+            spawnpoints.set(spawnCount + ".y", location.getY());
+            spawnpoints.set(spawnCount + ".z", location.getZ());
             spawnCount++;
         }
 
         section.set("borderSize", this.getBorderSize());
 
-        section.set("redeploy.x", this.getRedeployLocation().getX());
-        section.set("redeploy.y", this.getRedeployLocation().getY());
-        section.set("redeploy.z", this.getRedeployLocation().getZ());
+        ConfigurationSection redeploy = section.createSection("redeploy");
+        if (redeployLocation != null) {
+            redeploy.set("x", this.getRedeployLocation().getX());
+            redeploy.set("y", this.getRedeployLocation().getY());
+            redeploy.set("z", this.getRedeployLocation().getZ());
+        }
 
-        section.set("center.x", this.getCenter().getX());
-        section.set("center.y", this.getCenter().getY());
-        section.set("center.z", this.getCenter().getZ());
+        ConfigurationSection centerSection = section.createSection("center");
+        if (center != null) {
+            centerSection.set("x", center.getX());
+            centerSection.set("y", center.getY());
+            centerSection.set("z", center.getZ());
+        }
 
         Region region = this.getRegion();
 
@@ -507,35 +519,41 @@ public class Arena {
         section.set("maximum.y", maximum.getBlockY());
         section.set("maximum.z", maximum.getBlockZ());
 
-        Region plane = this.getPlane();
+        Region planeRegion = this.getPlane();
+        ConfigurationSection plane = section.createSection("plane");
 
-        BlockVector3 planeMin = plane.getMinimumPoint();
-        section.set("plane.min.x", planeMin.getBlockX());
-        section.set("plane.min.y", planeMin.getBlockY());
-        section.set("plane.min.z", planeMin.getBlockZ());
+        if (planeRegion != null) {
+            BlockVector3 planeMin = planeRegion.getMinimumPoint();
+            plane.set("min.x", planeMin.getBlockX());
+            plane.set("min.y", planeMin.getBlockY());
+            plane.set("min.z", planeMin.getBlockZ());
 
-        BlockVector3 planeMax = plane.getMaximumPoint();
-        section.set("plane.max.x", planeMax.getBlockX());
-        section.set("plane.max.y", planeMax.getBlockY());
-        section.set("plane.max.z", planeMax.getBlockZ());
-
-        for (int i = 0; i < this.getFallenBlocks().size(); i++) {
-            Location fallenBlock = this.getFallenBlocks().get(i);
-            section.set("fallenBlocks." + i + ".x", fallenBlock.getX());
-            section.set("fallenBlocks." + i + ".y", fallenBlock.getY());
-            section.set("fallenBlocks." + i + ".z", fallenBlock.getZ());
+            BlockVector3 planeMax = planeRegion.getMaximumPoint();
+            plane.set("max.x", planeMax.getBlockX());
+            plane.set("max.y", planeMax.getBlockY());
+            plane.set("max.z", planeMax.getBlockZ());
         }
 
+        ConfigurationSection fallenBlocks = section.createSection("fallenBlocks");
+        for (int i = 0; i < this.getFallenBlocks().size(); i++) {
+            Location fallenBlock = this.getFallenBlocks().get(i);
+            fallenBlocks.set(i + ".x", fallenBlock.getX());
+            fallenBlocks.set(i + ".y", fallenBlock.getY());
+            fallenBlocks.set(i + ".z", fallenBlock.getZ());
+        }
+
+        ConfigurationSection explodedBlocks = section.createSection("explodedBlocks");
         int blockCount = 0;
         for (Block block : this.getExplodedBlocks().keySet()) {
             Location location = block.getLocation();
-            section.set("explodedBlocks." + blockCount + ".location.x", location.getX());
-            section.set("explodedBlocks." + blockCount + ".location.y", location.getY());
-            section.set("explodedBlocks." + blockCount + ".location.z", location.getZ());
-            section.set("explodedBlocks." + blockCount + ".data", block.getBlockData().getAsString());
+            explodedBlocks.set(blockCount + ".location.x", location.getX());
+            explodedBlocks.set(blockCount + ".location.y", location.getY());
+            explodedBlocks.set(blockCount + ".location.z", location.getZ());
+            explodedBlocks.set(blockCount + ".data", block.getBlockData().getAsString());
             blockCount++;
         }
 
+        survivalMain.saveConfig(arenaConfig, SurvivalMain.arenaConfigFile);
         return true;
 
     }

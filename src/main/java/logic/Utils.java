@@ -3,6 +3,7 @@ package logic;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 
 public class Utils {
 
@@ -39,6 +40,14 @@ public class Utils {
 
     public static Location offsetLocation(Location loc, float dx, float dy, float dz) {
         return offsetLocation(loc, dz, dy, dz, 0, 0);
+    }
+
+    public static ConfigurationSection getConfigurationSection(String path, ConfigurationSection config) {
+        ConfigurationSection section = config.getConfigurationSection(path);
+        if (section == null) {
+            section = config.createSection(path);
+        }
+        return section;
     }
 
 }
