@@ -132,7 +132,7 @@ public class Sg implements CommandExecutor {
                 }
                 return true;
 
-            case "start":
+            case "join":
                 if (args.length != 2) {
                     sender.sendMessage(ChatColor.RED + "Incorrect command usage! Try /sg join [arena name]");
                     return true;
@@ -163,7 +163,7 @@ public class Sg implements CommandExecutor {
 
                 for (Location location : a.getSpawnPoints().keySet()) {
                     // true means someone is there
-                    if (!a.getSpawnPoints().get(location)) {
+                    if (a.getSpawnPoints().get(location) != null) {
                         left++;
                     }
                 }
@@ -172,11 +172,10 @@ public class Sg implements CommandExecutor {
 
                 if (left > 0) {
                     for (Location location : a.getSpawnPoints().keySet()) {
-                        // true means someone is there
-                        if (!a.getSpawnPoints().get(location)) {
+                        if (a.getSpawnPoints().get(location) != null) {
                             a.addPlayer(player);
                             player.teleport(location);
-                            a.getSpawnPoints().replace(location, true);
+                            a.getSpawnPoints().replace(location, player);
                             break;
                         }
                     }
@@ -185,6 +184,23 @@ public class Sg implements CommandExecutor {
                 } else {
                     player.sendMessage(ChatColor.RED + "Game is full!");
                 }
+                return true;
+
+            case "start":
+                if (args.length != 1) {
+                    sender.sendMessage(ChatColor.RED + "Incorrect command usage! While in an arena, try /sg start");
+                    return true;
+                }
+
+                if (!survivalMain.getArenaManager().playerInGame(player)) {
+                    sender.sendMessage(ChatColor.RED + "Must be in a game to execute this command!");
+                    return true;
+                }
+
+
+                setTimer(10);
+                survivalMain.getArenaManager().getArenaWithPlayer(player).prepareMap();
+                startTimer(survivalMain.getArenaManager().getArenaWithPlayer(player));
                 return true;
 
             case "setcenter":
@@ -302,6 +318,7 @@ public class Sg implements CommandExecutor {
         taskID = scheduler.scheduleSyncRepeatingTask(survivalMain, () -> {
             if (timer == 0) {
                 // grace period over
+                arena.getSpawnPoints().replaceAll((l, v) -> null);
                 startGame(arena);
                 stopTimer();
                 return;

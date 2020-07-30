@@ -30,7 +30,7 @@ public class Arena {
     List<Player> players;
     private final Region region;
     private final String name;
-    private final Map<Location, Boolean> spawnPoints;
+    private final Map<Location, Player> spawnPoints;
     private final World world;
 
     // for grace period
@@ -250,6 +250,10 @@ public class Arena {
     public void endGracePeriod() {
         this.gracePeriod = false;
 
+        for (Location location : this.spawnPoints.keySet()) {
+            this.spawnPoints.replace(location, null);
+        }
+
         World world = this.getCenter().getWorld();
         assert world != null;
         world.getWorldBorder().setCenter(this.getCenter());
@@ -340,14 +344,14 @@ public class Arena {
         if (this.spawnPoints.isEmpty()) {
             this.redeployLocation = location;
         }
-        this.spawnPoints.put(location, false);
+        this.spawnPoints.put(location, null);
     }
 
     public Location getRedeployLocation() {
         return redeployLocation;
     }
 
-    public Map<Location, Boolean> getSpawnPoints() {
+    public Map<Location, Player> getSpawnPoints() {
         return spawnPoints;
     }
 
