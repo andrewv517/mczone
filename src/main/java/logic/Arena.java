@@ -238,6 +238,7 @@ public class Arena {
 
     public void endFreezePeriod() {
         this.freezePeriod = false;
+        this.gracePeriod = true;
         setTimer(15);
         startTimer();
     }
@@ -359,11 +360,12 @@ public class Arena {
     }
 
     public void startTimer() {
+        // implement grace period
         BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
         taskID = scheduler.scheduleSyncRepeatingTask(survivalMain, () -> {
             if (timer == 0) {
                 // grace period over
-                endGracePeriod();
+                this.endGracePeriod();
                 stopTimer();
                 return;
             }
@@ -434,5 +436,4 @@ public class Arena {
             block.setBlockData(explodedBlocks.get(block));
         }
     }
-
 }

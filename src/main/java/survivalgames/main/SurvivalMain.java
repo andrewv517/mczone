@@ -8,7 +8,6 @@ import listeners.MoveAction;
 import logic.ArenaManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.Objects;
 
@@ -35,7 +34,6 @@ public final class SurvivalMain extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlockAction(), this);
         getServer().getPluginManager().registerEvents(new MoveAction(), this);
         getServer().getPluginManager().registerEvents(new DeathAction(), this);
-
 
     }
 

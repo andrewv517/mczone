@@ -145,7 +145,6 @@ public class DeathAction implements Listener {
         BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
         gulagTimer = 120;
         Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(p);
-        int size = arena.getPlayersInGulag().size() + arena.getPlayersInGulagMatch().size();
         gulagID = scheduler.scheduleSyncRepeatingTask(survivalMain, () -> {
             if (gulagTimer == 0) {
                 arena.addPlayerToPastGulag(p);
@@ -167,7 +166,7 @@ public class DeathAction implements Listener {
                 p.sendMessage(ChatColor.GOLD + "If no one is sent to the gulag in " + gulagTimer / 60 +  " minute(s), you will be redeployed!");
             }
 
-            if (survivalMain.getArenaManager().getArenaWithPlayer(p).getPlayersInGulagMatch().contains(p)) {
+            if (survivalMain.getArenaManager().getArenaWithPlayer(p) == null || survivalMain.getArenaManager().getArenaWithPlayer(p).getPlayersInGulagMatch().contains(p)) {
                 stopGulagTimer();
                 return;
             }
@@ -186,7 +185,13 @@ public class DeathAction implements Listener {
         Player p = event.getPlayer();
 
         if (survivalMain.getArenaManager().getArenaWithPlayer(p) == null) return;
-        handleDeath(p);
+
+        Arena arena = survivalMain.getArenaManager().getArenaWithPlayer(p);
+        if (arena.getPlayersInGulagMatch().contains(p)) {
+            handleDeath(p);
+        } else {
+            arena.removePlayer(p);
+        }
         Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " has left! They have been eliminated");
         p.setGameMode(GameMode.SPECTATOR);
     }
