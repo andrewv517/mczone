@@ -93,7 +93,6 @@ public class Arena {
         this.borderSize = borderSize;
         this.explodedBlocks = new HashMap<>();
         this.fallenBlocks = new ArrayList<>();
-        this.save(true);
         this.lastSave = 0;
     }
 
@@ -549,11 +548,10 @@ public class Arena {
             explodedBlocks.set(blockCount + ".location.x", location.getX());
             explodedBlocks.set(blockCount + ".location.y", location.getY());
             explodedBlocks.set(blockCount + ".location.z", location.getZ());
-            explodedBlocks.set(blockCount + ".data", block.getBlockData().getAsString());
+            explodedBlocks.set(blockCount + ".data", this.getExplodedBlocks().get(block).getAsString());
             blockCount++;
         }
 
-        survivalMain.saveConfig(arenaConfig, SurvivalMain.arenaConfigFile);
         return true;
 
     }

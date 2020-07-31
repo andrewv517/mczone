@@ -73,6 +73,7 @@ public final class SurvivalMain extends JavaPlugin {
                     Region region = new CuboidRegion(BukkitAdapter.adapt(world), minimum, maximum);
 
                     Arena arena = new Arena(region, arenaName, borderSize);
+
                     for (String spawnpoint : config.getConfigurationSection("spawnpoints").getKeys(false)) {
                         Location location = new Location(world,
                                 config.getDouble("spawnpoints." + spawnpoint + ".x"),
@@ -97,7 +98,7 @@ public final class SurvivalMain extends JavaPlugin {
                                 config.getDouble("explodedBlocks." + s + ".location." + ".y"),
                                 config.getDouble("explodedBlocks." + s + ".location." + ".z")
                         );
-                        arena.addExplodedBlock(location.getBlock(), Bukkit.createBlockData(config.getString("explodedBlocks." + s + ".data")));
+                        arena.addExplodedBlock(location.getBlock(), Bukkit.createBlockData(config.getString("explodedBlocks." + s +".data")));
                     }
 
                     arena.setRedeployLocation(new Location(world,
