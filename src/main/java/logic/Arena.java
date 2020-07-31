@@ -8,6 +8,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -21,8 +23,13 @@ import org.bukkit.scheduler.BukkitScheduler;
 import survivalgames.main.SurvivalMain;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class Arena {
+
+    private static final YamlConfiguration arenaConfig = SurvivalMain.survivalMain.getArenaConfig();
+    private static final long SAVE_INTERVAL = 10000;
+    private long lastSave;
 
     private final SurvivalMain survivalMain;
     List<Player> players;
@@ -52,6 +59,7 @@ public class Arena {
     private Location redeployLocation;
     private Location center = null;
     private double borderSize;
+    private Region plane = null;
     // 40% chance of food
     private static final Material[] FOOD = {Material.COOKED_BEEF, Material.COOKED_CHICKEN, Material.COOKED_PORKCHOP};
 
@@ -85,6 +93,7 @@ public class Arena {
         this.borderSize = borderSize;
         this.explodedBlocks = new HashMap<>();
         this.fallenBlocks = new ArrayList<>();
+        this.lastSave = 0;
     }
 
     public void addPlayer(Player player) {
@@ -97,6 +106,26 @@ public class Arena {
         player.setTotalExperience(0);
         player.setLevel(0);
         this.freezePeriod = true;
+    }
+
+    public void setRedeployLocation(Location redeployLocation) {
+        this.redeployLocation = redeployLocation;
+    }
+
+    public double getBorderSize() {
+        return borderSize;
+    }
+
+    public void setPlane(Region plane) {
+        this.plane = plane;
+    }
+
+    public Region getPlane() {
+        return plane;
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     public void setCenter(Location location) {
@@ -132,6 +161,7 @@ public class Arena {
         player.getActivePotionEffects().clear();
         player.setFireTicks(0);
         player.setHealth(20);
+        player.setFoodLevel(20);
 
         if (this.playersInGulag.size() >= 2 && this.playersInGulagMatch.isEmpty()) {
             Location side1 = new Location(player.getWorld(), 147, 43, -569);
@@ -190,7 +220,6 @@ public class Arena {
 
     public void removePlayer(Player player) {
         this.playersInGulag.remove(player);
-        this.playersInGulagMatch.clear();
         this.players.remove(player);
         if (this.players.size() <= 1) {
             end();
@@ -211,7 +240,7 @@ public class Arena {
         this.getPlayersInGulagMatch().clear();
         this.getPlayersInGulag().clear();
         this.getPastGulag().clear();
-        this.removeWorldBorder(Objects.requireNonNull(this.getRedeployLocation().getWorld()).getWorldBorder());
+        this.removeWorldBorder(Objects.requireNonNull(this.getCenter().getWorld()).getWorldBorder());
         this.setFreezePeriod(true);
         this.removeDropsOnGround(Objects.requireNonNull(this.getCenter().getWorld()));
         this.repairMap();
@@ -237,6 +266,16 @@ public class Arena {
 
     public void endGracePeriod() {
         this.gracePeriod = false;
+
+        World world = this.getCenter().getWorld();
+        assert world != null;
+        world.getWorldBorder().setCenter(this.getCenter());
+
+        world.getWorldBorder().setSize(this.borderSize);
+        startWorldBorderTimer(240, world.getWorldBorder());
+
+        // prevent ConcurrentModificationException
+        List<Player> playersInsidePlane = new ArrayList<>();
         for (Player p : this.getPlayers()) {
             if (p.getInventory().getChestplate() != null && p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
                 p.getInventory().setChestplate(new ItemStack(Material.AIR));
@@ -246,14 +285,16 @@ public class Arena {
                 p.getInventory().remove(Material.ELYTRA);
             }
 
+            if (Utils.isStrictlyInside(p.getLocation(), this.getPlane())) {
+                playersInsidePlane.add(p);
+            }
         }
 
-        World world = this.getCenter().getWorld();
-        assert world != null;
-        world.getWorldBorder().setCenter(this.getCenter());
-
-        world.getWorldBorder().setSize(this.borderSize);
-        startWorldBorderTimer(240, world.getWorldBorder());
+        for (Player p : playersInsidePlane) {
+            p.damage(20);
+            p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 10, 1);
+            Bukkit.broadcastMessage(ChatColor.GOLD + "" + p.getName() + " did not jump in time!");
+        }
     }
 
     public void removeWorldBorder(WorldBorder worldBorder) {
@@ -402,14 +443,117 @@ public class Arena {
     }
 
     private void repairMap() {
+
         // this must be done first otherwise we might overwrite an original block
         for (Location location : fallenBlocks) {
             Block block = location.getBlock();
             block.setType(Material.AIR);
         }
+
         for (Block block : explodedBlocks.keySet()) {
             block.setBlockData(explodedBlocks.get(block));
         }
+
+        fallenBlocks.clear();
+        explodedBlocks.clear();
+        save();
+
+    }
+
+    public boolean isStale() {
+        return System.currentTimeMillis() - lastSave > SAVE_INTERVAL;
+    }
+
+    public boolean save() {
+        return save(false);
+    }
+
+    public boolean save(boolean force) {
+
+        if (!force && !this.isStale()) {
+            return false;
+        }
+
+        lastSave = System.currentTimeMillis();
+
+        ConfigurationSection section = Utils.getConfigurationSection("arenas." + this.getName(), arenaConfig);
+
+        section.set("name", this.getName());
+        section.set("world", this.getWorld().getUID().toString());
+
+        ConfigurationSection spawnpoints = section.createSection("spawnpoints");
+        int spawnCount = 0;
+        for (Location location : this.getSpawnPoints().keySet()) {
+            spawnpoints.set(spawnCount + ".x", location.getX());
+            spawnpoints.set(spawnCount + ".y", location.getY());
+            spawnpoints.set(spawnCount + ".z", location.getZ());
+            spawnCount++;
+        }
+
+        section.set("borderSize", this.getBorderSize());
+
+        ConfigurationSection redeploy = section.createSection("redeploy");
+        if (redeployLocation != null) {
+            redeploy.set("x", this.getRedeployLocation().getX());
+            redeploy.set("y", this.getRedeployLocation().getY());
+            redeploy.set("z", this.getRedeployLocation().getZ());
+        }
+
+        ConfigurationSection centerSection = section.createSection("center");
+        if (center != null) {
+            centerSection.set("x", center.getX());
+            centerSection.set("y", center.getY());
+            centerSection.set("z", center.getZ());
+        }
+
+        Region region = this.getRegion();
+
+        BlockVector3 minimum = region.getMinimumPoint();
+        section.set("minimum.x", minimum.getBlockX());
+        section.set("minimum.y", minimum.getBlockY());
+        section.set("minimum.z", minimum.getBlockZ());
+
+        BlockVector3 maximum = region.getMaximumPoint();
+        section.set("maximum.x", maximum.getBlockX());
+        section.set("maximum.y", maximum.getBlockY());
+        section.set("maximum.z", maximum.getBlockZ());
+
+        Region planeRegion = this.getPlane();
+        ConfigurationSection plane = section.createSection("plane");
+
+        if (planeRegion != null) {
+            BlockVector3 planeMin = planeRegion.getMinimumPoint();
+            plane.set("min.x", planeMin.getBlockX());
+            plane.set("min.y", planeMin.getBlockY());
+            plane.set("min.z", planeMin.getBlockZ());
+
+            BlockVector3 planeMax = planeRegion.getMaximumPoint();
+            plane.set("max.x", planeMax.getBlockX());
+            plane.set("max.y", planeMax.getBlockY());
+            plane.set("max.z", planeMax.getBlockZ());
+        }
+
+        ConfigurationSection fallenBlocks = section.createSection("fallenBlocks");
+        for (int i = 0; i < this.getFallenBlocks().size(); i++) {
+            Location fallenBlock = this.getFallenBlocks().get(i);
+            fallenBlocks.set(i + ".x", fallenBlock.getX());
+            fallenBlocks.set(i + ".y", fallenBlock.getY());
+            fallenBlocks.set(i + ".z", fallenBlock.getZ());
+        }
+
+        ConfigurationSection explodedBlocks = section.createSection("explodedBlocks");
+        int blockCount = 0;
+        for (Block block : this.getExplodedBlocks().keySet()) {
+            Location location = block.getLocation();
+            explodedBlocks.set(blockCount + ".location.x", location.getX());
+            explodedBlocks.set(blockCount + ".location.y", location.getY());
+            explodedBlocks.set(blockCount + ".location.z", location.getZ());
+            explodedBlocks.set(blockCount + ".data", this.getExplodedBlocks().get(block).getAsString());
+            blockCount++;
+        }
+
+        return true;
+
     }
 
 }

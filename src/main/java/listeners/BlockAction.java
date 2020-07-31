@@ -5,15 +5,9 @@ import com.sk89q.worldedit.regions.Region;
 import logic.Arena;
 import logic.ArenaExplosion;
 import logic.Utils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -23,10 +17,14 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.util.Vector;
 import survivalgames.main.SurvivalMain;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 public class BlockAction implements Listener {
@@ -39,6 +37,8 @@ public class BlockAction implements Listener {
 
     @EventHandler
     public boolean onBlockBreak(BlockBreakEvent event) {
+
+        if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) return false;
 
         if (survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()) != null
                 && (survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()).getPlayersInGulag().contains(event.getPlayer()) ||
@@ -60,6 +60,9 @@ public class BlockAction implements Listener {
 
     @EventHandler
     public boolean onBlockPlace(BlockPlaceEvent event) {
+
+        if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) return false;
+
         for (Arena a : survivalMain.getArenaManager().getArenas()) {
             if (isInside(event.getBlock().getLocation(), a.getRegion())) {
 
@@ -149,6 +152,30 @@ public class BlockAction implements Listener {
 
         return true;
 
+    }
+
+    @EventHandler
+    public boolean onItemDrop(PlayerDropItemEvent event) {
+        if (survivalMain.getArenaManager().getArenaWithPlayer(event.getPlayer()) != null &&
+                event.getItemDrop().getItemStack().getType().equals(Material.ELYTRA)) {
+            event.setCancelled(true);
+            return true;
+        }
+        return false;
+    }
+
+    @EventHandler
+    public boolean onInventoryClickEvent(InventoryClickEvent event) {
+
+        Player p = (Player) event.getWhoClicked();
+
+        if (survivalMain.getArenaManager().getArenaWithPlayer(p) != null &&
+                event.getCurrentItem() != null && event.getCurrentItem().getType().equals(Material.ELYTRA)) {
+            event.setCancelled(true);
+            return true;
+        }
+
+        return false;
     }
 
     // tests if location is inside region
